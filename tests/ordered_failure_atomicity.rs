@@ -186,7 +186,7 @@ fn assert_overflow_retry(profile: Profile, sequence_max: u32, normal_tag: u8) ->
     Ok(())
 }
 
-fn assert_ordered(id: zlid::Zlid, expected: (u64, u8, u32, u8)) {
+fn assert_ordered(id: zlid::ZLID, expected: (u64, u8, u32, u8)) {
     let Inspection::Ordered {
         timestamp_ms,
         partition,

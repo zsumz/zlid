@@ -4,7 +4,7 @@ use std::rc::Rc;
 
 use zlid::{
     bytes_from_hex, ClockState, Inspection, OrderedEvent, OrderedGenerator, OrderedGeneratorCore,
-    Profile, Zlid,
+    Profile, ZLID,
 };
 
 use crate::helpers::parse_profile;
@@ -125,7 +125,7 @@ pub(crate) fn assert_generated_section(entries: &[Json]) {
     }
 }
 
-fn assert_generated_id(id: &Zlid, profile: Profile, expected: &BTreeMap<String, Json>) {
+fn assert_generated_id(id: &ZLID, profile: Profile, expected: &BTreeMap<String, Json>) {
     assert_eq!(string(get(expected, "text")), id.text());
     assert_eq!(string(get(expected, "bytesHex")), id.bytes_hex());
 

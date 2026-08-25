@@ -1,6 +1,6 @@
 [package]
 name = "zlid"
-version = "0.0.1-rc.1"
+version = "0.0.1-rc.2"
 edition = "2021"
 rust-version = "1.88"
 description = "Canonical, sortable, collision-resistant identifiers for Rust"
@@ -15,6 +15,7 @@ include = [
   "tests/**/*.rs",
   "examples/**/*.rs",
   "conformance/*.json",
+  "conformance/*.md",
   "conformance/*.sha256",
   "Cargo.toml",
   "Cargo.lock",
@@ -32,7 +33,13 @@ getrandom = "0.4.3"
 
 [features]
 default = []
-wasm-js = ["getrandom/wasm_js"]
+wasm-js = ["getrandom/wasm_js", "dep:js-sys"]
+
+[target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
+js-sys = { version = "0.3.104", optional = true }
+
+[target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dev-dependencies]
+wasm-bindgen-test = "=0.3.77"
 
 [lints.rust]
 missing_docs = "warn"

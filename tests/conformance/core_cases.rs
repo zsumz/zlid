@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use zlid::{bytes_from_hex, bytes_to_hex, pack_ordered, Inspection, Zlid};
+use zlid::{bytes_from_hex, bytes_to_hex, pack_ordered, Inspection, ZLID};
 
 use crate::helpers::{parse_clock_state, parse_profile};
 use crate::json::{get, number, object, string, Json};
@@ -19,7 +19,7 @@ pub(crate) fn assert_ordered_section(entries: &[Json]) {
 
         assert_eq!(string(get(entry, "bytesHex")), bytes_to_hex(&packed));
 
-        let id = Zlid::parse(string(get(entry, "text"))).unwrap();
+        let id = ZLID::parse(string(get(entry, "text"))).unwrap();
         assert_eq!(packed, id.bytes());
         assert_eq!(string(get(entry, "text")), id.text());
 
@@ -58,7 +58,7 @@ pub(crate) fn assert_random_section(entries: &[Json]) {
             assert_eq!(entropy.len(), size);
             entropy.clone()
         };
-        let id = Zlid::random_with(&mut source).unwrap();
+        let id = ZLID::random_with(&mut source).unwrap();
 
         assert_eq!(string(get(entry, "bytesHex")), id.bytes_hex());
         assert_eq!(string(get(entry, "text")), id.text());
@@ -81,7 +81,7 @@ pub(crate) fn assert_alias_section(domain: &BTreeMap<String, Json>, entries: &[J
     for entry in entries {
         let entry = object(entry);
         let source =
-            Zlid::from_bytes(&bytes_from_hex(string(get(entry, "sourceBytesHex"))).unwrap())
+            ZLID::from_bytes(&bytes_from_hex(string(get(entry, "sourceBytesHex"))).unwrap())
                 .unwrap();
         assert_eq!(string(get(entry, "sourceText")), source.text());
 
@@ -123,11 +123,11 @@ pub(crate) fn assert_alias_section(domain: &BTreeMap<String, Json>, entries: &[J
         }
     }
 
-    let random = Zlid::parse("014D2PF2DBSQQG28T5CY4TQKF5").unwrap();
+    let random = ZLID::parse("014D2PF2DBSQQG28T5CY4TQKF5").unwrap();
     assert!(random.alias_str(&key, tweak).is_err());
     assert!(random.unalias_str(&key, tweak).is_err());
-    assert!(Zlid::NIL.alias_str(&key, tweak).is_err());
-    assert!(Zlid::parse("01K2R7KFWE5807000000000001")
+    assert!(ZLID::NIL.alias_str(&key, tweak).is_err());
+    assert!(ZLID::parse("01K2R7KFWE5807000000000001")
         .unwrap()
         .alias(&[], b"")
         .is_err());

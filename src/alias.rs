@@ -8,26 +8,26 @@ use crate::crypto::hmac_sha256;
 use crate::error::{Error, Result};
 use crate::ordered_types::ClockState;
 use crate::profile::Profile;
-use crate::Zlid;
+use crate::ZLID;
 
-pub(crate) fn alias_zlid(source: Zlid, key: &[u8], tweak: &[u8]) -> Result<Zlid> {
+pub(crate) fn alias_zlid(source: ZLID, key: &[u8], tweak: &[u8]) -> Result<ZLID> {
     let key = normalize_alias_key(key)?;
     let tweak = normalize_tweak(tweak)?;
     let alias_tag = source_tag_to_alias_tag(source.tag())?;
     let source_data = (u128::from_be_bytes(source.0) >> 4) & MASK_124;
     let alias_data = permute124(key, tweak, source_data)?;
-    Ok(Zlid(
+    Ok(ZLID(
         ((alias_data << 4) | u128::from(alias_tag)).to_be_bytes(),
     ))
 }
 
-pub(crate) fn unalias_zlid(alias: Zlid, key: &[u8], tweak: &[u8]) -> Result<Zlid> {
+pub(crate) fn unalias_zlid(alias: ZLID, key: &[u8], tweak: &[u8]) -> Result<ZLID> {
     let key = normalize_alias_key(key)?;
     let tweak = normalize_tweak(tweak)?;
     let source_tag = alias_tag_to_source_tag(alias.tag())?;
     let alias_data = (u128::from_be_bytes(alias.0) >> 4) & MASK_124;
     let source_data = inverse_permute124(key, tweak, alias_data)?;
-    Ok(Zlid(
+    Ok(ZLID(
         ((source_data << 4) | u128::from(source_tag)).to_be_bytes(),
     ))
 }

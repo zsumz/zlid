@@ -20,6 +20,9 @@ rg -Fq "## $manifest_version" "$ROOT/CHANGELOG.md"
 rg -Fq "zlid = \"=$manifest_version\"" "$ROOT/README.md"
 rg -Fq "zlid = { version = \"=$manifest_version\", features = [\"wasm-js\"] }" "$ROOT/README.md"
 rg -Fq 'repository = "https://github.com/zsumz/zlid"' "$ROOT/Cargo.toml"
+rg -Fq 'zlid-io/spec/blob/22669bdac45248e77708a602c8510d2bee39697d/SPECIFICATION.md' "$ROOT/README.md"
+rg -Fq '22669bdac45248e77708a602c8510d2bee39697d' "$ROOT/conformance/README.md"
+rg -Fq 'b8164b8346509e05d56871967858c012eacaa6d4' "$ROOT/conformance/README.md"
 
 (
   cd "$ROOT/conformance"

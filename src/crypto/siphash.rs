@@ -64,3 +64,7 @@ fn sip_round(v0: &mut u64, v1: &mut u64, v2: &mut u64, v3: &mut u64) {
     *v1 ^= *v2;
     *v2 = v2.rotate_left(32);
 }
+
+#[cfg(test)]
+#[path = "siphash_tests.rs"]
+mod tests;

@@ -25,4 +25,4 @@ focused regression case.
 
 Keep changes narrow, use Conventional Commit subjects, and explain compatibility
 or wire-format consequences explicitly. Every pull request must pass the MSRV,
-stable, macOS, Windows, package, and downstream-consumer checks.
+stable, macOS, Windows, WebAssembly, package, and downstream-consumer checks.

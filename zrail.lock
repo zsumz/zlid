@@ -2,19 +2,19 @@
 schema = 2
 semantics = 3
 producer = "0.0.3-rc.4"
-contract_sha256 = "5d6f2bd8a7442085ed2711a31d3f1686edea65af96c5372712cfc16704b50301"
+contract_sha256 = "7ca4d7b45de6e0357648eec15560c45c94cc19a67d86661edfc03d19c27e9d76"
 ratchet = []
 
 [analysis]
-inventory_sha256 = "89e2228964f1c499906c18f77549573f0773c821ad127ea6857f705096c1b207"
+inventory_sha256 = "774184bc8b82d4276adf169e815e05dbbd1305e422ccfa0384b4618147be6e88"
 exclusions_sha256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-cargo_lock_sha256 = "f792588e44d2e62c8937024d0aee90196d30239a00a7a0eef2062d123379b07e"
+cargo_lock_sha256 = "fcab29a16b1185d147975320583dd75a7858c1711864338a5a694175679bc4e1"
 packages = 1
-targets = 5
-physical_rust_files = 33
-base_source_contexts = 51
+targets = 10
+physical_rust_files = 41
+base_source_contexts = 59
 derived_source_contexts = 0
-source_facts = 9840
+source_facts = 12605
 projection_queries = 0
 projected_facts = 0
 unresolved_bindings = 0
@@ -22,7 +22,7 @@ analyzer_semantics = 3
 
 [[analysis.contract_source]]
 path = "zrail.toml"
-sha256 = "5898de8f457419d1cab51ceaad39119c80c694d59c2d59847325370f9bf06dd4"
+sha256 = "8021a5618742da3bac5b6d6e81dd563d5016bc0a9d0e628ba85fc863cdb92058"
 
 [[package]]
 name = "zlid"
@@ -39,3 +39,31 @@ default_features = true
 [package.dependency.source]
 kind = "registry"
 requirement = "0.4.3"
+
+[[package.dependency]]
+alias = "js-sys"
+name = "js-sys"
+crate_root = "js_sys"
+kind = "normal"
+scope = "external"
+target = 'cfg(all(target_arch = "wasm32", target_os = "unknown"))'
+optional = true
+default_features = true
+
+[package.dependency.source]
+kind = "registry"
+requirement = "0.3.104"
+
+[[package.dependency]]
+alias = "wasm-bindgen-test"
+name = "wasm-bindgen-test"
+crate_root = "wasm_bindgen_test"
+kind = "development"
+scope = "external"
+target = 'cfg(all(target_arch = "wasm32", target_os = "unknown"))'
+optional = false
+default_features = true
+
+[package.dependency.source]
+kind = "registry"
+requirement = "=0.3.77"

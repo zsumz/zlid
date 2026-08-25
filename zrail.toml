@@ -15,6 +15,24 @@ root = "getrandom"
 kind = "registry"
 requirement = "0.4.3"
 
+[[dependencies.crate_root]]
+package = "js-sys"
+reason = "The optional WebAssembly adapter supplies the JavaScript wall clock."
+root = "js_sys"
+
+[dependencies.crate_root.source]
+kind = "registry"
+requirement = "0.3.104"
+
+[[dependencies.crate_root]]
+package = "wasm-bindgen-test"
+reason = "The WebAssembly runtime smoke executes the public clock and entropy APIs under Node.js."
+root = "wasm_bindgen_test"
+
+[dependencies.crate_root.source]
+kind = "registry"
+requirement = "=0.3.77"
+
 [[layer]]
 may_depend_on = []
 name = "library"
@@ -119,6 +137,15 @@ reason = "Tests construct bounded fixture and scripted-value collections."
 [[source.rust.macros.allow]]
 name = "write"
 reason = "Display implementations write deterministic error descriptions."
+
+[[source.rust.macros.allow]]
+bindings = "none"
+name = "wasm_bindgen_test::wasm_bindgen_test"
+reason = "The target-gated integration test uses the official WebAssembly test harness attribute."
+
+[source.rust.macros.allow.source]
+kind = "registry"
+requirement = "=0.3.77"
 
 [source.rust.size.auxiliary]
 hard = 300

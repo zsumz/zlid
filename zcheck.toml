@@ -36,7 +36,7 @@ needs = ["source-shape", "zrail", "git-diff", "git-diff-cached"]
 description = "Verify release metadata and the pinned conformance snapshot."
 run = ["scripts/check-metadata"]
 tools = ["bash", "cut", "head", "rg", "sed", "shasum"]
-inputs = ["scripts/check-metadata", "Cargo.toml", "README.md", "CHANGELOG.md", "conformance/zlid-v0.1-golden.json", "conformance/zlid-v0.1-golden.sha256"]
+inputs = ["scripts/check-metadata", "Cargo.toml", "README.md", "CHANGELOG.md", "conformance/README.md", "conformance/zlid-v0.1-golden.json", "conformance/zlid-v0.1-golden.sha256"]
 
 [tasks.format]
 description = "Validate Rust formatting."
@@ -73,16 +73,22 @@ run = ["cargo", "test", "--locked", "--doc", "--all-features"]
 tools = ["cargo"]
 resources = ["cargo-target"]
 
+[tasks.example]
+description = "Execute the documented end-to-end API tour."
+run = ["cargo", "run", "--locked", "--example", "quickstart", "--all-features"]
+tools = ["cargo"]
+resources = ["cargo-target"]
+
 [tasks.rust-test]
 description = "Validate runtime, API, and documentation behavior."
-needs = ["test", "doctest"]
+needs = ["test", "doctest", "example"]
 
 [tasks.package]
 description = "Build and inspect the publishable crate archive."
 run = ["scripts/check-package", "--allow-dirty"]
 tools = ["bash", "cargo", "grep", "tr", "wc"]
 resources = ["cargo-target"]
-inputs = ["scripts/check-package", "Cargo.toml", "Cargo.lock", "README.md", "CHANGELOG.md", "LICENSE", "conformance/coverage.json", "conformance/zlid-v0.1-golden.json", "conformance/zlid-v0.1-golden.sha256"]
+inputs = ["scripts/check-package", "Cargo.toml", "Cargo.lock", "README.md", "CHANGELOG.md", "LICENSE", "conformance/README.md", "conformance/coverage.json", "conformance/zlid-v0.1-golden.json", "conformance/zlid-v0.1-golden.sha256"]
 
 [tasks.check]
 description = "Run complete local ZLID qualification."

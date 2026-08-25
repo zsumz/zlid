@@ -4,7 +4,8 @@ This directory vendors the ZLID v0.1 golden dataset used by the Rust SDK. The
 fixture is part of the published crate so its tests remain self-contained after
 download from crates.io.
 
-- Specification: <https://github.com/zlid-io/spec>
+- Normative specification: [`22669bdac45248e77708a602c8510d2bee39697d`](https://github.com/zlid-io/spec/blob/22669bdac45248e77708a602c8510d2bee39697d/SPECIFICATION.md)
+- Specification blob: `b8164b8346509e05d56871967858c012eacaa6d4`
 - Source fixture release: `0.1.0-beta.2`
 - Extraction source: ZLID monorepo commit `4f90f76a183d2c9d508badfd99ec465758f777da`
 

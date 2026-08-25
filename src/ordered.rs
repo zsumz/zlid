@@ -6,7 +6,7 @@ use crate::error::{Error, Result};
 use crate::ordered_types::{ClockState, OrderedEvent, OrderedFields};
 use crate::profile::{max_value_for_bits, sequence_bits, Profile};
 use crate::random::{random_value, EntropySource, SystemEntropy};
-use crate::Zlid;
+use crate::ZLID;
 
 /// Explicit ordered generator.
 pub struct OrderedGenerator<C = SystemClock, E = SystemEntropy> {
@@ -52,12 +52,12 @@ where
 
     #[allow(clippy::should_implement_trait)]
     /// Emits the next ID for the generator's default partition.
-    pub fn next(&mut self) -> Result<Zlid> {
+    pub fn next(&mut self) -> Result<ZLID> {
         self.next_event_and_pack(None)
     }
 
     /// Emits the next ID for an explicit partition.
-    pub fn next_with_partition(&mut self, partition: u8) -> Result<Zlid> {
+    pub fn next_with_partition(&mut self, partition: u8) -> Result<ZLID> {
         self.next_event_and_pack(Some(partition))
     }
 
@@ -66,7 +66,7 @@ where
         self.core.next(partition)
     }
 
-    fn next_event_and_pack(&mut self, partition: Option<u8>) -> Result<Zlid> {
+    fn next_event_and_pack(&mut self, partition: Option<u8>) -> Result<ZLID> {
         let prepared = self.core.prepare_next(partition)?;
         let event = prepared.event;
         let spec = self.core.profile().spec();
@@ -80,7 +80,7 @@ where
             event.tag,
         )?;
         self.core.commit(prepared);
-        Ok(Zlid(bytes))
+        Ok(ZLID(bytes))
     }
 }
 

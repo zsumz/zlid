@@ -32,17 +32,19 @@ pub use random::{EntropySource, SystemEntropy};
 
 /// Immutable 16-byte ZLID value.
 #[derive(Copy, Clone, Eq, PartialEq, Hash)]
-pub struct Zlid(pub(crate) [u8; BYTE_LENGTH]);
+pub struct ZLID(pub(crate) [u8; BYTE_LENGTH]);
 
-/// Uppercase alias for callers who prefer the product acronym spelling.
-pub type ZLID = Zlid;
+/// Compatibility alias for the original Rust-style spelling.
+///
+/// New code should use [`ZLID`].
+pub type Zlid = ZLID;
 
-impl Zlid {
+impl ZLID {
     /// Reserved NIL sentinel.
-    pub const NIL: Zlid = Zlid([0; BYTE_LENGTH]);
+    pub const NIL: ZLID = ZLID([0; BYTE_LENGTH]);
 
     /// Reserved MAX sentinel.
-    pub const MAX: Zlid = Zlid([0xff; BYTE_LENGTH]);
+    pub const MAX: ZLID = ZLID([0xff; BYTE_LENGTH]);
 
     /// Parses canonical or friendly ZLID text.
     pub fn parse(text: &str) -> Result<Self> {
@@ -60,12 +62,12 @@ impl Zlid {
         }
         let mut raw = [0u8; BYTE_LENGTH];
         raw.copy_from_slice(bytes);
-        Ok(Zlid(raw))
+        Ok(ZLID(raw))
     }
 
     /// Creates a ZLID from an owned byte array.
     pub fn from_array(bytes: [u8; BYTE_LENGTH]) -> Self {
-        Zlid(bytes)
+        ZLID(bytes)
     }
 
     /// Emits the next ordered ZLID from the shared default generator.
@@ -106,10 +108,13 @@ impl Zlid {
 
     /// Emits a ZLID-R using an injected entropy source.
     pub fn random_with<E: EntropySource>(source: &mut E) -> Result<Self> {
-        random::random_zlid(source).map(Zlid)
+        random::random_zlid(source).map(ZLID)
     }
 
     /// Encodes an ordered ZLID as a deterministic ZLID-A alias.
+    ///
+    /// The non-empty key must be a high-entropy application secret. ZLID-A
+    /// does not authenticate the result or detect a wrong key during decoding.
     pub fn alias(&self, key: &[u8], tweak: &[u8]) -> Result<Self> {
         alias::alias_zlid(*self, key, tweak)
     }
@@ -120,6 +125,9 @@ impl Zlid {
     }
 
     /// Decodes a ZLID-A alias back to the ordered source.
+    ///
+    /// Applications are responsible for selecting the same versioned key and
+    /// tweak that were used to create the alias.
     pub fn unalias(&self, key: &[u8], tweak: &[u8]) -> Result<Self> {
         alias::unalias_zlid(*self, key, tweak)
     }
@@ -160,48 +168,50 @@ impl Zlid {
     }
 
     /// Computes unsigned lexicographic byte-order comparison.
-    pub fn compare(a: &Zlid, b: &Zlid) -> Ordering {
+    pub fn compare(a: &ZLID, b: &ZLID) -> Ordering {
         a.cmp(b)
     }
 
     /// Computes SipHash-2-4(key16, input) & 0xff for byte input.
+    /// An omitted key uses the public all-zero key.
     pub fn partition_bytes(input: &[u8], key: Option<&[u8]>) -> Result<u8> {
         partition_bytes(input, key)
     }
 
     /// Computes SipHash-2-4(key16, utf8(input)) & 0xff.
+    /// An omitted key uses the public all-zero key.
     pub fn partition_str(input: &str, key: Option<&[u8]>) -> Result<u8> {
         partition_bytes(input.as_bytes(), key)
     }
 }
 
-impl fmt::Debug for Zlid {
+impl fmt::Debug for ZLID {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_tuple("Zlid").field(&self.text()).finish()
+        f.debug_tuple("ZLID").field(&self.text()).finish()
     }
 }
 
-impl fmt::Display for Zlid {
+impl fmt::Display for ZLID {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(&self.text())
     }
 }
 
-impl std::str::FromStr for Zlid {
+impl std::str::FromStr for ZLID {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self> {
-        Zlid::parse(s)
+        ZLID::parse(s)
     }
 }
 
-impl Ord for Zlid {
+impl Ord for ZLID {
     fn cmp(&self, other: &Self) -> Ordering {
         self.0.cmp(&other.0)
     }
 }
 
-impl PartialOrd for Zlid {
+impl PartialOrd for ZLID {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }

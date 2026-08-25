@@ -18,13 +18,19 @@ required=(
   "CHANGELOG.md"
   "LICENSE"
   "README.md"
+  "conformance/README.md"
   "conformance/coverage.json"
   "conformance/zlid-v0.1-golden.json"
   "conformance/zlid-v0.1-golden.sha256"
   "examples/quickstart.rs"
   "src/lib.rs"
+  "tests/alias_boundaries.rs"
   "tests/api.rs"
   "tests/conformance.rs"
+  "tests/ordered_boundaries.rs"
+  "tests/ordered_properties.rs"
+  "tests/value_properties.rs"
+  "tests/wasm_runtime.rs"
 )
 
 for file in "${required[@]}"; do

@@ -1,6 +1,6 @@
 use crate::constants::{ALPHABET, BYTE_LENGTH, STRING_LENGTH};
 use crate::error::{Error, Result};
-use crate::Zlid;
+use crate::ZLID;
 
 pub(crate) fn encode_text(bytes: &[u8; BYTE_LENGTH]) -> String {
     let value = u128::from_be_bytes(*bytes);
@@ -12,10 +12,10 @@ pub(crate) fn encode_text(bytes: &[u8; BYTE_LENGTH]) -> String {
     out
 }
 
-pub(crate) fn decode_text(input: &str) -> Result<Zlid> {
+pub(crate) fn decode_text(input: &str) -> Result<ZLID> {
     let mut normalized = Vec::with_capacity(STRING_LENGTH);
     for ch in input.chars() {
-        if ch == '-' || ch == '_' || ch.is_whitespace() {
+        if matches!(ch, '-' | '_' | ' ') {
             continue;
         }
         let upper = ch.to_ascii_uppercase();
@@ -53,7 +53,7 @@ pub(crate) fn decode_text(input: &str) -> Result<Zlid> {
     for symbol in normalized {
         value = (value << 5) | u128::from(symbol);
     }
-    Ok(Zlid(value.to_be_bytes()))
+    Ok(ZLID(value.to_be_bytes()))
 }
 
 fn alphabet_value(ch: char) -> Option<u8> {

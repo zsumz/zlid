@@ -2,6 +2,16 @@
 
 All notable changes to this project are documented here.
 
+## 0.0.1-rc.2 - 2026-08-25
+
+- Made `ZLID` the primary Rust type while retaining `Zlid` as a compatibility
+  alias.
+- Added a JavaScript-backed system clock and executable Node.js qualification
+  for `wasm32-unknown-unknown`.
+- Added independent HMAC-SHA256 and SipHash-2-4 reference vectors plus
+  deterministic wire, alias, state-machine, and concurrency properties.
+- Pinned the exact normative ZLID v0.1 specification commit and blob.
+
 ## 0.0.1-rc.1 - 2026-08-25
 
 - Added the complete Rust SDK for the ZLID v0.1 ordered, random, alias,

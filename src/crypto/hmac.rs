@@ -26,3 +26,7 @@ pub(crate) fn hmac_sha256(key: &[u8], parts: &[&[u8]]) -> [u8; 32] {
     outer.extend_from_slice(&inner_hash);
     sha256(&outer)
 }
+
+#[cfg(test)]
+#[path = "hmac_tests.rs"]
+mod tests;

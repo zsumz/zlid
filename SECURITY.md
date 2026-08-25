@@ -14,6 +14,11 @@ release candidate. Older release candidates may be asked to upgrade.
 ## Boundaries
 
 - ZLID-A is reversible obfuscation, not encryption or authentication.
+- ZLID-A keys must be high-entropy secrets loaded from secret storage. Decoding
+  with the wrong key is not detected; applications own key versioning and
+  rotation.
+- An omitted partition key is the public all-zero key. Partition values are
+  domain labels, not a security boundary.
 - Ordered IDs are deterministically unique per coordinated generator, profile,
   and partition stream—not across arbitrary uncoordinated writers.
 - ZLID-R is collision-resistant, not a mathematical global-uniqueness proof.

@@ -28,6 +28,9 @@ CARGO_TARGET_DIR="$audit_dir/package-target" \
   cargo test --manifest-path "$package_root/Cargo.toml" --locked --all-targets
 CARGO_TARGET_DIR="$audit_dir/package-target" \
   cargo test --manifest-path "$package_root/Cargo.toml" --locked --doc
+CARGO_TARGET_DIR="$audit_dir/package-target" \
+  cargo run --manifest-path "$package_root/Cargo.toml" --locked \
+    --example quickstart --all-features --quiet
 
 mkdir -p "$audit_dir/consumer/src"
 cat > "$audit_dir/consumer/Cargo.toml" <<EOF
@@ -41,15 +44,15 @@ zlid = { path = "$package_root" }
 EOF
 
 cat > "$audit_dir/consumer/src/main.rs" <<'EOF'
-use zlid::{Inspection, Profile, Zlid};
+use zlid::{Inspection, Profile, ZLID};
 
 fn main() -> zlid::Result<()> {
-    let parsed = Zlid::parse("01k2r7-kfwe58 07000000000001")?;
+    let parsed = ZLID::parse("01k2r7-kfwe58 07000000000001")?;
     assert_eq!(parsed.text(), "01K2R7KFWE5807000000000001");
 
-    let generated = Zlid::generator(Profile::Default, 42).next()?;
+    let generated = ZLID::generator(Profile::Default, 42).next()?;
     assert!(matches!(generated.inspect(), Inspection::Ordered { partition: 42, .. }));
-    assert!(matches!(Zlid::random()?.inspect(), Inspection::Random { .. }));
+    assert!(matches!(ZLID::random()?.inspect(), Inspection::Random { .. }));
     Ok(())
 }
 EOF
