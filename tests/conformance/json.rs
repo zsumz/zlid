@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum Json {
     Null,
-    Bool(()),
+    Bool(bool),
     Number(i64),
     String(String),
     Array(Vec<Json>),
@@ -47,11 +47,11 @@ impl<'a> JsonParser<'a> {
             '"' => self.parse_string().map(Json::String),
             't' => {
                 self.expect_literal("true")?;
-                Ok(Json::Bool(()))
+                Ok(Json::Bool(true))
             }
             'f' => {
                 self.expect_literal("false")?;
-                Ok(Json::Bool(()))
+                Ok(Json::Bool(false))
             }
             'n' => {
                 self.expect_literal("null")?;
@@ -78,7 +78,9 @@ impl<'a> JsonParser<'a> {
             self.skip_whitespace();
             self.expect_char(':')?;
             let value = self.parse_value()?;
-            map.insert(key, value);
+            if map.insert(key.clone(), value).is_some() {
+                return Err(format!("duplicate JSON object key {key:?}"));
+            }
             self.skip_whitespace();
             if self.consume_if('}') {
                 return Ok(Json::Object(map));
@@ -134,6 +136,12 @@ impl<'a> JsonParser<'a> {
                             ));
                         }
                     }
+                }
+                other if other <= '\u{001f}' => {
+                    return Err(format!(
+                        "unescaped JSON control character U+{:04X} at offset {}",
+                        other as u32, self.index
+                    ));
                 }
                 other => out.push(other),
             }
@@ -266,5 +274,12 @@ pub(crate) fn number(value: &Json) -> i64 {
     match value {
         Json::Number(value) => *value,
         other => panic!("expected number, got {other:?}"),
+    }
+}
+
+pub(crate) fn boolean(value: &Json) -> bool {
+    match value {
+        Json::Bool(value) => *value,
+        other => panic!("expected boolean, got {other:?}"),
     }
 }
