@@ -3,9 +3,9 @@
 use std::hint::black_box;
 use std::time::{Duration, Instant};
 
-use zlid::{
-    pack_ordered, unpack_ordered, EntropySource, OrderedGenerator, Profile, SystemEntropy, ZLID,
-};
+use zlid::advanced::{EntropySource, SystemEntropy};
+use zlid::wire::{pack_ordered, unpack_ordered};
+use zlid::{OrderedGenerator, Profile, ZLID};
 
 const SAMPLES: usize = 21;
 const MIN_SAMPLE: Duration = Duration::from_millis(25);
@@ -188,30 +188,59 @@ fn advisory_lanes() {
     report("advisory", "ordered shared", |nonce| {
         black_box(ZLID::next_with_partition(nonce as u8 & 3).unwrap());
     });
-    parallel_generation("ordered explicit 4t", false);
-    parallel_generation("ordered shared 4t", true);
+    for threads in [1, 2, 4, 8] {
+        parallel_generation(ParallelLane::ExplicitDistinct, threads);
+        parallel_generation(ParallelLane::SharedSame, threads);
+        parallel_generation(ParallelLane::SharedDistinct, threads);
+    }
 }
 
-fn parallel_generation(name: &str, shared: bool) {
-    const THREADS: u64 = 4;
+#[derive(Clone, Copy)]
+enum ParallelLane {
+    ExplicitDistinct,
+    SharedSame,
+    SharedDistinct,
+}
+
+impl ParallelLane {
+    fn name(self) -> &'static str {
+        match self {
+            Self::ExplicitDistinct => "explicit distinct",
+            Self::SharedSame => "shared same",
+            Self::SharedDistinct => "shared distinct",
+        }
+    }
+
+    fn partition(self, worker: u8) -> u8 {
+        match self {
+            Self::SharedSame => 0,
+            Self::ExplicitDistinct | Self::SharedDistinct => worker,
+        }
+    }
+}
+
+fn parallel_generation(lane: ParallelLane, threads: u64) {
     const PER_THREAD: u64 = 100_000;
     let started = Instant::now();
     std::thread::scope(|scope| {
-        for partition in 0..THREADS as u8 {
+        for worker in 0..threads as u8 {
+            let partition = lane.partition(worker);
             scope.spawn(move || {
-                let mut generator = ZLID::generator(Profile::Default, partition);
+                let mut generator = OrderedGenerator::new(Profile::Default, partition);
                 for _ in 0..PER_THREAD {
-                    let id = if shared {
-                        ZLID::next_with_partition(partition).unwrap()
-                    } else {
-                        generator.next().unwrap()
+                    let id = match lane {
+                        ParallelLane::ExplicitDistinct => generator.next().unwrap(),
+                        ParallelLane::SharedSame | ParallelLane::SharedDistinct => {
+                            ZLID::next_with_partition(partition).unwrap()
+                        }
                     };
                     black_box(id);
                 }
             });
         }
     });
-    let per_second = (THREADS * PER_THREAD) as f64 / started.elapsed().as_secs_f64();
+    let per_second = (threads * PER_THREAD) as f64 / started.elapsed().as_secs_f64();
+    let name = format!("{} {threads}t", lane.name());
     println!("{:13} {name:23} {per_second:>9.0} ops/s", "advisory");
 }
 

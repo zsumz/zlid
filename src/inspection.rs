@@ -1,5 +1,6 @@
 use crate::alias::alias_source_from_tag;
 use crate::bytes::bytes_to_hex;
+use crate::classification::Family;
 use crate::constants::{BYTE_LENGTH, TAG_ZLID_RANDOM};
 use crate::ordered::{format_random_tail, unpack_ordered};
 use crate::ordered_types::ClockState;
@@ -8,6 +9,7 @@ use crate::text::encode_text;
 
 /// Semantic kind reported by inspection.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum InspectionKind {
     /// A time-sortable ZLID.
     Ordered,
@@ -55,8 +57,10 @@ impl SentinelName {
 
 /// Structured inspection output.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum Inspection {
     /// Decoded fields from a time-sortable ZLID.
+    #[non_exhaustive]
     Ordered {
         /// Canonical 26-character representation.
         text: String,
@@ -78,6 +82,7 @@ pub enum Inspection {
         random_hex: String,
     },
     /// Decoded fields from a random ZLID-R.
+    #[non_exhaustive]
     Random {
         /// Canonical 26-character representation.
         text: String,
@@ -89,6 +94,7 @@ pub enum Inspection {
         random_hex: String,
     },
     /// Decoded fields from a reversible ZLID-A alias.
+    #[non_exhaustive]
     Alias {
         /// Canonical 26-character representation.
         text: String,
@@ -104,6 +110,7 @@ pub enum Inspection {
         alias_data_hex: String,
     },
     /// A reserved boundary value.
+    #[non_exhaustive]
     Sentinel {
         /// Canonical 26-character representation.
         text: String,
@@ -115,6 +122,7 @@ pub enum Inspection {
         name: SentinelName,
     },
     /// A well-formed payload with an unknown family tag.
+    #[non_exhaustive]
     Opaque {
         /// Canonical 26-character representation.
         text: String,
@@ -170,12 +178,12 @@ impl Inspection {
         }
     }
 
-    /// Returns the specification family name when the tag is known.
-    pub fn family(&self) -> Option<&'static str> {
+    /// Returns the specification family when the tag is known.
+    pub fn family(&self) -> Option<Family> {
         match self {
-            Inspection::Ordered { .. } => Some("ZLID"),
-            Inspection::Random { .. } => Some("ZLID-R"),
-            Inspection::Alias { .. } => Some("ZLID-A"),
+            Inspection::Ordered { .. } => Some(Family::Ordered),
+            Inspection::Random { .. } => Some(Family::Random),
+            Inspection::Alias { .. } => Some(Family::Alias),
             Inspection::Sentinel { .. } | Inspection::Opaque { .. } => None,
         }
     }

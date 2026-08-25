@@ -1,6 +1,6 @@
 use std::cmp::Ordering;
 
-use zlid::{ClockState, Profile, SentinelName};
+use zlid::{wire::ClockState, Profile, SentinelName};
 
 pub(crate) fn parse_profile(value: &str) -> Profile {
     Profile::from_wire_name(value).unwrap()

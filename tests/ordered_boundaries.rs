@@ -4,8 +4,9 @@ use std::cell::Cell;
 use std::rc::Rc;
 
 use zlid::{
-    unpack_ordered, Clock, EntropySource, Error, OrderedEvent, OrderedGenerator,
-    OrderedGeneratorCore, Profile,
+    advanced::{Clock, EntropySource, OrderedEvent, OrderedGeneratorCore},
+    wire::unpack_ordered,
+    Error, OrderedGenerator, Profile,
 };
 
 const MAX_TS: u64 = (1_u64 << 48) - 1;

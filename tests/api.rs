@@ -1,34 +1,32 @@
 //! Public API behavior outside the shared wire-format fixture.
 
 use std::hash::Hash;
-use std::mem::size_of;
+use std::mem::{align_of, size_of};
 
 use zlid::{
-    bytes_from_hex, partition_bytes, partition_str, ClockState, Error, Inspection,
-    OrderedGenerator, Profile, SentinelName, Zlid, ZLID,
+    advanced::OrderedGeneratorCore, wire::ClockState, Error, Inspection, OrderedGenerator, Profile,
+    SentinelName, ZLID,
 };
 
 fn assert_value_traits<T: Copy + Eq + Ord + Hash + Send + Sync>() {}
 
 #[test]
-fn uppercase_name_is_primary_and_original_spelling_stays_compatible() {
+fn uppercase_name_and_representation_are_explicit() {
     assert_value_traits::<ZLID>();
-    assert_eq!(size_of::<ZLID>(), 16);
+    assert_eq!(size_of::<ZLID>(), ZLID::BYTE_LENGTH);
+    assert_eq!(align_of::<ZLID>(), align_of::<[u8; 16]>());
+    assert_eq!(ZLID::BYTE_LENGTH, 16);
+    assert_eq!(ZLID::TEXT_LENGTH, 26);
     assert_eq!(std::any::type_name::<ZLID>(), "zlid::ZLID");
-
-    let primary: ZLID = Zlid::NIL;
-    let compatible: Zlid = ZLID::MAX;
-    assert_eq!(primary, ZLID::NIL);
-    assert_eq!(compatible, Zlid::MAX);
     assert_eq!(
-        format!("{primary:?}"),
+        format!("{:?}", ZLID::NIL),
         "ZLID(\"00000000000000000000000000\")"
     );
 }
 
 #[test]
 fn owned_and_borrowed_bytes_preserve_the_exact_value() {
-    let bytes = [0x5a; 16];
+    let bytes = [0x5a; ZLID::BYTE_LENGTH];
     let id = ZLID::from_array(bytes);
     assert_eq!(id.bytes(), bytes);
     assert_eq!(id.as_bytes(), &bytes);
@@ -44,22 +42,41 @@ fn owned_and_borrowed_bytes_preserve_the_exact_value() {
 }
 
 #[test]
-fn sentinel_text_round_trips() {
-    assert_eq!(ZLID::NIL.text(), "00000000000000000000000000");
-    assert_eq!(ZLID::MAX.text(), "7ZZZZZZZZZZZZZZZZZZZZZZZZZ");
-    assert_eq!(ZLID::parse(&ZLID::MAX.text()).unwrap(), ZLID::MAX);
-}
+fn canonical_and_friendly_parsing_have_distinct_contracts() {
+    let canonical = "01K2R7KFWE5807000000000001";
+    let expected = ZLID::parse_canonical(canonical).unwrap();
+    assert_eq!(expected.text(), canonical);
+    assert_eq!(canonical.parse::<ZLID>().unwrap(), expected);
 
-#[test]
-fn display_and_from_str_share_canonical_text() {
-    let parsed: ZLID = "01k2r7-kfwe58 07000000000001".parse().unwrap();
-    assert_eq!(parsed.to_string(), "01K2R7KFWE5807000000000001");
+    for friendly in [
+        "01k2r7kfwe5807000000000001",
+        "01K2R7KF-WE580_7000000000001",
+        "O1K2R7KFWE58 07OOOOOOOOOOO1",
+    ] {
+        assert_eq!(ZLID::parse(friendly).unwrap(), expected);
+        assert!(matches!(
+            ZLID::parse_canonical(friendly),
+            Err(Error::InvalidText(_))
+        ));
+    }
+
+    for rejected in [
+        "81K2R7KFWE5807000000000001",
+        "01K2R7KFWE580700000000000U",
+        "01K2R7KFWE580700000000000",
+        "01K2R7KFWE58070000000000010",
+    ] {
+        assert!(matches!(
+            ZLID::parse_canonical(rejected),
+            Err(Error::InvalidText(_))
+        ));
+    }
 }
 
 #[test]
 fn friendly_parsing_ignores_only_specified_ascii_separators() {
     let canonical = "01K2R7KFWE5807000000000001";
-    let expected = ZLID::parse(canonical).unwrap();
+    let expected = ZLID::parse_canonical(canonical).unwrap();
 
     for separator in ["-", "_", " "] {
         let friendly = format!("{}{}{}", &canonical[..13], separator, &canonical[13..]);
@@ -76,72 +93,110 @@ fn friendly_parsing_ignores_only_specified_ascii_separators() {
 }
 
 #[test]
-fn stable_public_names_and_errors_are_explicit() {
-    assert_eq!(Profile::Default.wire_name(), "default");
-    assert_eq!(Profile::HighThroughput.wire_name(), "high-throughput");
+fn semantic_errors_are_programmatically_distinct() {
     assert_eq!(
         Profile::from_wire_name("high-throughput").unwrap(),
         Profile::HighThroughput
     );
     assert!(matches!(
         Profile::from_wire_name("fast"),
-        Err(Error::InvalidText(_))
+        Err(Error::UnknownProfile(profile)) if profile == "fast"
     ));
-    assert_eq!(ClockState::Normal.wire_name(), "normal");
-    assert_eq!(ClockState::Clamped.wire_name(), "clamped");
-    assert_eq!(SentinelName::Nil.wire_name(), "NIL");
-    assert_eq!(SentinelName::Max.wire_name(), "MAX");
+    assert!(matches!(
+        ZLID::NIL.alias(b"", b""),
+        Err(Error::EmptyAliasKey)
+    ));
+    assert!(matches!(
+        ZLID::NIL.alias(b"key", &vec![0; 65_536]),
+        Err(Error::TweakTooLong {
+            maximum: 65_535,
+            actual: 65_536
+        })
+    ));
+    assert!(matches!(
+        ZLID::NIL.alias(b"key", b""),
+        Err(Error::InvalidTag {
+            operation: "alias",
+            expected: "an ordered ZLID tag",
+            actual: 0,
+        })
+    ));
 
-    assert!(bytes_from_hex("0").is_err());
-    assert!(bytes_from_hex("GG").is_err());
-    assert!(bytes_from_hex("0G").is_err());
     assert_eq!(
-        partition_str("tenant", None),
-        partition_bytes(b"tenant", None)
+        Error::UnknownProfile("fast".to_string()).to_string(),
+        "unknown ZLID profile \"fast\""
     );
     assert_eq!(
         Error::InvalidLength {
-            what: "key",
+            what: "partition key",
             expected: 16,
-            actual: 3,
+            actual: 15,
         }
         .to_string(),
-        "key must be exactly 16 bytes, got 3"
+        "partition key must be exactly 16 bytes, got 15"
     );
     assert_eq!(
-        Error::InvalidText("bad".to_string()).to_string(),
-        "invalid ZLID text: bad"
-    );
-    assert_eq!(Error::OutOfRange("too large").to_string(), "too large");
-    assert_eq!(
-        Error::InvalidFamily("wrong family").to_string(),
-        "wrong family"
+        Error::InvalidText("bad alphabet".to_string()).to_string(),
+        "invalid ZLID text: bad alphabet"
     );
     assert_eq!(
-        Error::Random("offline".to_string()).to_string(),
-        "random source error: offline"
+        Error::EmptyAliasKey.to_string(),
+        "alias key must not be empty"
     );
     assert_eq!(
-        Error::Clock("regressed".to_string()).to_string(),
-        "clock error: regressed"
+        Error::TweakTooLong {
+            maximum: 65_535,
+            actual: 65_536,
+        }
+        .to_string(),
+        "alias tweak must be at most 65535 bytes, got 65536"
+    );
+    assert_eq!(
+        Error::InvalidTag {
+            operation: "alias",
+            expected: "an ordered ZLID tag",
+            actual: 5,
+        }
+        .to_string(),
+        "alias expected an ordered ZLID tag, got ZLID tag 0x5"
+    );
+    assert_eq!(
+        Error::FieldOutOfRange {
+            field: "sequence",
+            maximum: 4_095,
+            actual: 4_096,
+        }
+        .to_string(),
+        "ZLID field sequence must be at most 4095, got 4096"
+    );
+    assert_eq!(
+        Error::EntropyUnavailable("offline".to_string()).to_string(),
+        "entropy unavailable: offline"
+    );
+    assert_eq!(
+        Error::Clock("before epoch".to_string()).to_string(),
+        "clock error: before epoch"
+    );
+    assert_eq!(
+        Error::GeneratorPoisoned.to_string(),
+        "shared ZLID generator mutex is poisoned"
     );
 }
 
 #[test]
-fn generator_convenience_constructors_preserve_profiles() {
-    assert_eq!(ZLID::default_generator().profile(), Profile::Default);
+fn primary_and_advanced_generator_paths_are_deliberate() {
+    assert_eq!(OrderedGenerator::default().profile(), Profile::Default);
     assert_eq!(
-        ZLID::generator_for_profile(Profile::HighThroughput).profile(),
+        OrderedGenerator::with_profile(Profile::HighThroughput).profile(),
         Profile::HighThroughput
     );
     assert_eq!(
-        ZLID::generator(Profile::Default, 17).profile(),
+        OrderedGenerator::new(Profile::Default, 17).profile(),
         Profile::Default
     );
 
-    let mut generator =
-        OrderedGenerator::with_sources(Profile::HighThroughput, 17, || 1_000, |size| vec![0; size]);
-    let event = generator.next_event(None).unwrap();
+    let mut core = OrderedGeneratorCore::new(Profile::HighThroughput, 17, || 1_000);
+    let event = core.next(None).unwrap();
     assert_eq!(
         (
             event.timestamp_ms,
@@ -154,16 +209,25 @@ fn generator_convenience_constructors_preserve_profiles() {
 }
 
 #[test]
-fn system_entropy_supplies_random_ids() -> zlid::Result<()> {
+fn stable_wire_names_are_explicit() {
+    assert_eq!(Profile::Default.wire_name(), "default");
+    assert_eq!(Profile::HighThroughput.wire_name(), "high-throughput");
+    assert_eq!(ClockState::Normal.wire_name(), "normal");
+    assert_eq!(ClockState::Clamped.wire_name(), "clamped");
+    assert_eq!(SentinelName::Nil.wire_name(), "NIL");
+    assert_eq!(SentinelName::Max.wire_name(), "MAX");
+    assert_eq!(
+        ZLID::partition_str("tenant", None),
+        ZLID::partition_bytes(b"tenant", None)
+    );
+}
+
+#[test]
+fn system_sources_supply_public_identifier_families() -> zlid::Result<()> {
     assert!(matches!(
         ZLID::random()?.inspect(),
         Inspection::Random { .. }
     ));
-    Ok(())
-}
-
-#[test]
-fn shared_generator_supplies_ordered_ids() -> zlid::Result<()> {
     assert!(matches!(
         ZLID::next()?.inspect(),
         Inspection::Ordered { .. }

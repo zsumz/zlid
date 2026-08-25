@@ -6,6 +6,7 @@ use std::sync::OnceLock;
 
 mod alias;
 mod bytes;
+mod classification;
 mod clock;
 mod constants;
 mod crypto;
@@ -19,29 +20,32 @@ mod random;
 mod shared;
 mod text;
 
-use constants::BYTE_LENGTH;
+use bytes::bytes_to_hex;
+use constants::{BYTE_LENGTH, STRING_LENGTH};
+use random::{EntropySource, SystemEntropy};
 use shared::SharedOrderedGenerator;
 
-pub use bytes::{bytes_from_hex, bytes_to_hex};
-pub use clock::{Clock, SystemClock};
+pub mod advanced;
+pub mod wire;
+
+pub use classification::Family;
 pub use error::{Error, Result};
 pub use inspection::{Inspection, InspectionKind, SentinelName};
-pub use ordered::{pack_ordered, unpack_ordered, OrderedGenerator, OrderedGeneratorCore};
-pub use ordered_types::{ClockState, OrderedEvent, OrderedFields};
-pub use partition::{partition_bytes, partition_str};
+pub use ordered::OrderedGenerator;
 pub use profile::Profile;
-pub use random::{EntropySource, SystemEntropy};
 
 /// Immutable 16-byte ZLID value.
+#[repr(transparent)]
 #[derive(Copy, Clone, Eq, PartialEq, Hash)]
 pub struct ZLID(pub(crate) [u8; BYTE_LENGTH]);
 
-/// Compatibility alias for the original Rust-style spelling.
-///
-/// New code should use [`ZLID`].
-pub type Zlid = ZLID;
-
 impl ZLID {
+    /// Binary representation length in bytes.
+    pub const BYTE_LENGTH: usize = BYTE_LENGTH;
+
+    /// Canonical text representation length in ASCII characters.
+    pub const TEXT_LENGTH: usize = STRING_LENGTH;
+
     /// Reserved NIL sentinel.
     pub const NIL: ZLID = ZLID([0; BYTE_LENGTH]);
 
@@ -51,6 +55,11 @@ impl ZLID {
     /// Parses canonical or friendly ZLID text.
     pub fn parse(text: &str) -> Result<Self> {
         text::decode_text(text)
+    }
+
+    /// Parses only the canonical uppercase 26-character representation.
+    pub fn parse_canonical(text: &str) -> Result<Self> {
+        text::decode_canonical_text(text)
     }
 
     /// Creates a ZLID from exactly 16 bytes. The input is copied.
@@ -84,21 +93,6 @@ impl ZLID {
             .next_with_partition(partition)
     }
 
-    /// Creates a default-profile explicit ordered generator with partition `0`.
-    pub fn default_generator() -> OrderedGenerator {
-        OrderedGenerator::default()
-    }
-
-    /// Creates an explicit ordered generator for a profile with partition `0`.
-    pub fn generator_for_profile(profile: Profile) -> OrderedGenerator {
-        OrderedGenerator::with_profile(profile)
-    }
-
-    /// Creates a new explicit ordered generator.
-    pub fn generator(profile: Profile, default_partition: u8) -> OrderedGenerator {
-        OrderedGenerator::new(profile, default_partition)
-    }
-
     /// Emits a ZLID-R using the system entropy source.
     pub fn random() -> Result<Self> {
         let mut source = SystemEntropy;
@@ -114,6 +108,8 @@ impl ZLID {
     ///
     /// The non-empty key must be a high-entropy application secret. ZLID-A
     /// does not authenticate the result or detect a wrong key during decoding.
+    /// Equal source values are linkable within one key-and-tweak domain, and
+    /// the public alias tag retains the source profile and clock state.
     pub fn alias(&self, key: &[u8], tweak: &[u8]) -> Result<Self> {
         alias::alias_zlid(*self, key, tweak)
     }
@@ -166,21 +162,26 @@ impl ZLID {
         inspection::inspect_bytes(self.0)
     }
 
-    /// Computes unsigned lexicographic byte-order comparison.
-    pub fn compare(a: &ZLID, b: &ZLID) -> Ordering {
-        a.cmp(b)
+    /// Returns the allocation-free semantic category of this value.
+    pub fn kind(self) -> InspectionKind {
+        classification::classify_bytes(&self.0).kind
+    }
+
+    /// Returns the allocation-free ZLID family, if the tag is known.
+    pub fn family(self) -> Option<Family> {
+        classification::classify_bytes(&self.0).family
     }
 
     /// Computes SipHash-2-4(key16, input) & 0xff for byte input.
     /// An omitted key uses the public all-zero key.
     pub fn partition_bytes(input: &[u8], key: Option<&[u8]>) -> Result<u8> {
-        partition_bytes(input, key)
+        partition::partition_bytes(input, key)
     }
 
     /// Computes SipHash-2-4(key16, utf8(input)) & 0xff.
     /// An omitted key uses the public all-zero key.
     pub fn partition_str(input: &str, key: Option<&[u8]>) -> Result<u8> {
-        partition_bytes(input.as_bytes(), key)
+        partition::partition_str(input, key)
     }
 }
 

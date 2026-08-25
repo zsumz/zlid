@@ -3,7 +3,7 @@
 use std::collections::HashSet;
 use std::sync::{Arc, Barrier};
 
-use zlid::{Error, Inspection, InspectionKind, SentinelName, ZLID};
+use zlid::{Error, Family, Inspection, InspectionKind, SentinelName, ZLID};
 
 const ALPHABET: &[u8] = b"0123456789ABCDEFGHJKMNPQRSTVWXYZ";
 
@@ -37,7 +37,7 @@ fn arbitrary_payloads_round_trip_and_inspect_consistently() {
     text_order.sort();
     assert_eq!(byte_order_text, text_order);
     for pair in by_bytes.windows(2) {
-        assert_eq!(ZLID::compare(&pair[0], &pair[1]), pair[0].cmp(&pair[1]));
+        assert_eq!(pair[0].cmp(&pair[1]), pair[0].bytes().cmp(&pair[1].bytes()));
     }
 }
 
@@ -117,30 +117,41 @@ fn deterministic_values() -> Vec<ZLID> {
 }
 
 fn assert_inspection_classification(value: ZLID, inspection: &Inspection) {
-    let (kind, family, sentinel, known) = if value == ZLID::NIL || value == ZLID::MAX {
-        (InspectionKind::Sentinel, None, true, false)
+    let (kind, family, kind_name, sentinel, known) = if value == ZLID::NIL || value == ZLID::MAX {
+        (InspectionKind::Sentinel, None, "sentinel", true, false)
     } else {
         match value.tag() {
-            1..=4 => (InspectionKind::Ordered, Some("ZLID"), false, true),
-            5 => (InspectionKind::Random, Some("ZLID-R"), false, true),
-            6..=9 => (InspectionKind::Alias, Some("ZLID-A"), false, true),
-            _ => (InspectionKind::Opaque, None, false, false),
+            1..=4 => (
+                InspectionKind::Ordered,
+                Some(Family::Ordered),
+                "ordered",
+                false,
+                true,
+            ),
+            5 => (
+                InspectionKind::Random,
+                Some(Family::Random),
+                "random",
+                false,
+                true,
+            ),
+            6..=9 => (
+                InspectionKind::Alias,
+                Some(Family::Alias),
+                "alias",
+                false,
+                true,
+            ),
+            _ => (InspectionKind::Opaque, None, "opaque", false, false),
         }
     };
+    assert_eq!(value.kind(), kind);
+    assert_eq!(value.family(), family);
     assert_eq!(inspection.kind(), kind);
     assert_eq!(inspection.family(), family);
     assert_eq!(inspection.is_sentinel(), sentinel);
     assert_eq!(inspection.is_known_family(), known);
-    assert_eq!(
-        kind.wire_name(),
-        match kind {
-            InspectionKind::Ordered => "ordered",
-            InspectionKind::Random => "random",
-            InspectionKind::Alias => "alias",
-            InspectionKind::Sentinel => "sentinel",
-            InspectionKind::Opaque => "opaque",
-        }
-    );
+    assert_eq!(kind.wire_name(), kind_name);
     match inspection {
         Inspection::Sentinel {
             name: SentinelName::Nil,

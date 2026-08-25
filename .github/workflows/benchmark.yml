@@ -1,0 +1,117 @@
+name: Benchmark
+
+on:
+  workflow_dispatch:
+    inputs:
+      baseline_tag:
+        description: Baseline release tag
+        required: true
+        default: v0.0.1-rc.3
+        type: string
+  schedule:
+    - cron: "23 5 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: benchmark-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  BASELINE_TAG: ${{ inputs.baseline_tag || 'v0.0.1-rc.3' }}
+  CARGO_TERM_COLOR: always
+  RUST_VERSION: 1.98.0
+
+jobs:
+  compare:
+    name: advisory / Rust 1.98.0
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out candidate
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          path: candidate
+          persist-credentials: false
+      - name: Check out baseline
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          ref: ${{ inputs.baseline_tag || 'v0.0.1-rc.3' }}
+          path: baseline
+          persist-credentials: false
+      - name: Set up exact stable Rust
+        uses: zactionsz/setup-rust@8a57ecfd865b04df6fd794ba3a40049c2c563867
+        with:
+          toolchain: 1.98.0
+          profile: minimal
+          update: false
+      - name: Verify baseline tag
+        run: |
+          set -euo pipefail
+          baseline_sha="$(git -C baseline rev-parse HEAD)"
+          tagged_sha="$(
+            git -C baseline rev-parse "refs/tags/$BASELINE_TAG^{commit}"
+          )"
+          test "$baseline_sha" = "$tagged_sha"
+      - name: Capture environment
+        run: |
+          set -euo pipefail
+          mkdir -p benchmark-results
+          {
+            printf 'captured_utc=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            printf 'candidate_ref=%s\n' "$GITHUB_REF"
+            printf 'candidate_sha=%s\n' "$(git -C candidate rev-parse HEAD)"
+            printf 'baseline_tag=%s\n' "$BASELINE_TAG"
+            printf 'baseline_sha=%s\n' "$(git -C baseline rev-parse HEAD)"
+            printf 'runner_os=%s\n' "$RUNNER_OS"
+            printf 'runner_arch=%s\n' "$RUNNER_ARCH"
+            printf 'runner_image=%s\n' "${ImageOS:-unknown}"
+            printf 'runner_image_version=%s\n' "${ImageVersion:-unknown}"
+            printf 'rust_version=%s\n' "$RUST_VERSION"
+            rustc -Vv
+            cargo -V
+            uname -a
+            lscpu
+          } > benchmark-results/environment.txt
+      - name: Compare candidate with baseline
+        run: |
+          set -euo pipefail
+          sha256sum candidate/benches/hot_paths.rs \
+            baseline/benches/hot_paths.rs > benchmark-results/harnesses.sha256
+          (
+            cd baseline
+            CARGO_TARGET_DIR="$RUNNER_TEMP/zlid-baseline-target" \
+              cargo bench --locked --bench hot-paths -- --measure
+          ) 2>&1 | tee benchmark-results/baseline.raw.txt
+          (
+            cd candidate
+            CARGO_TARGET_DIR="$RUNNER_TEMP/zlid-candidate-target" \
+              cargo bench --locked --bench hot-paths -- --measure
+          ) 2>&1 | tee benchmark-results/candidate.raw.txt
+          grep -E '^(deterministic|advisory)' \
+            benchmark-results/baseline.raw.txt \
+            > benchmark-results/baseline.txt
+          grep -E '^(deterministic|advisory)' \
+            benchmark-results/candidate.raw.txt \
+            > benchmark-results/candidate.txt
+          {
+            printf '## Advisory benchmark\n\n'
+            printf 'Baseline %s; candidate %s; Rust %s.\n\n' \
+              "$BASELINE_TAG" "$GITHUB_SHA" "$RUST_VERSION"
+            printf 'Timing is advisory and does not gate pull requests. '
+            printf 'Each revision runs its own harness; compare equivalent lanes only. '
+            printf 'Raw outputs and runner metadata are attached.\n\n'
+            printf '### Baseline\n\n'
+            sed 's/^/    /' benchmark-results/baseline.txt
+            printf '\n### Candidate\n\n'
+            sed 's/^/    /' benchmark-results/candidate.txt
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload raw evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: zlid-benchmark-${{ github.run_id }}-${{ github.run_attempt }}
+          path: benchmark-results
+          if-no-files-found: error
+          retention-days: 90

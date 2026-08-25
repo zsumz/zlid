@@ -15,6 +15,8 @@ mod generated_cases;
 mod hardening_tests;
 #[path = "conformance/helpers.rs"]
 mod helpers;
+#[path = "support/hex.rs"]
+mod hex;
 #[path = "conformance/json.rs"]
 mod json;
 #[path = "conformance/schema.rs"]

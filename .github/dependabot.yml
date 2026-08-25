@@ -8,6 +8,14 @@ updates:
       cargo-dependencies:
         patterns: ["*"]
     open-pull-requests-limit: 5
+  - package-ecosystem: cargo
+    directory: /fuzz
+    schedule:
+      interval: weekly
+    groups:
+      fuzz-dependencies:
+        patterns: ["*"]
+    open-pull-requests-limit: 5
   - package-ecosystem: github-actions
     directory: /
     schedule:

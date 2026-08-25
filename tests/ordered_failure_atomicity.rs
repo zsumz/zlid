@@ -4,7 +4,10 @@ use std::cell::{Cell, RefCell};
 use std::collections::VecDeque;
 use std::rc::Rc;
 
-use zlid::{Clock, EntropySource, Error, Inspection, OrderedGenerator, Profile};
+use zlid::{
+    advanced::{Clock, EntropySource},
+    Error, Inspection, OrderedGenerator, Profile,
+};
 
 struct FailAtCall {
     calls: usize,
@@ -20,7 +23,9 @@ impl EntropySource for FailAtCall {
         let call = self.calls;
         self.calls += 1;
         if call == self.fail_at {
-            return Err(Error::Random("injected entropy failure".to_string()));
+            return Err(Error::EntropyUnavailable(
+                "injected entropy failure".to_string(),
+            ));
         }
         out.fill(0);
         Ok(())
@@ -36,7 +41,9 @@ impl EntropySource for PartialThenZero {
         if !self.failed {
             self.failed = true;
             out.fill(0xff);
-            return Err(Error::Random("partial entropy failure".to_string()));
+            return Err(Error::EntropyUnavailable(
+                "partial entropy failure".to_string(),
+            ));
         }
         out.fill(0);
         Ok(())
@@ -84,7 +91,10 @@ fn first_entropy_failure_does_not_initialize_stream() -> zlid::Result<()> {
     };
     let mut generator = OrderedGenerator::with_sources(Profile::Default, 7, clock, entropy);
 
-    assert!(matches!(generator.next(), Err(Error::Random(_))));
+    assert!(matches!(
+        generator.next(),
+        Err(Error::EntropyUnavailable(_))
+    ));
     assert_eq!(*trace.borrow(), ["clock", "entropy"]);
 
     assert_ordered(generator.next()?, (1_000, 7, 0, 1));
@@ -111,7 +121,10 @@ fn failed_newer_clock_does_not_change_later_clamp_baseline() -> zlid::Result<()>
     let mut generator = OrderedGenerator::with_sources(Profile::Default, 3, clock, entropy);
 
     assert_ordered(generator.next()?, (1_000, 3, 0, 1));
-    assert!(matches!(generator.next(), Err(Error::Random(_))));
+    assert!(matches!(
+        generator.next(),
+        Err(Error::EntropyUnavailable(_))
+    ));
     assert_ordered(generator.next()?, (1_000, 3, 1, 3));
     Ok(())
 }
@@ -121,7 +134,10 @@ fn partial_entropy_write_then_error_does_not_initialize_stream() -> zlid::Result
     let entropy = PartialThenZero { failed: false };
     let mut generator = OrderedGenerator::with_sources(Profile::Default, 4, || 1_000, entropy);
 
-    assert!(matches!(generator.next(), Err(Error::Random(_))));
+    assert!(matches!(
+        generator.next(),
+        Err(Error::EntropyUnavailable(_))
+    ));
     let id = generator.next()?;
     assert_ordered(id, (1_000, 4, 0, 1));
     let Inspection::Ordered { random_hex, .. } = id.inspect() else {
@@ -142,7 +158,7 @@ fn failed_partition_does_not_change_any_partition_state() -> zlid::Result<()> {
 
     assert!(matches!(
         generator.next_with_partition(7),
-        Err(Error::Random(_))
+        Err(Error::EntropyUnavailable(_))
     ));
     assert_ordered(generator.next_with_partition(8)?, (1_000, 8, 0, 1));
     assert_ordered(generator.next_with_partition(7)?, (1_000, 7, 0, 1));
@@ -180,7 +196,10 @@ fn assert_overflow_retry(profile: Profile, sequence_max: u32, normal_tag: u8) ->
     for _ in 0..=sequence_max {
         generator.next()?;
     }
-    assert!(matches!(generator.next(), Err(Error::Random(_))));
+    assert!(matches!(
+        generator.next(),
+        Err(Error::EntropyUnavailable(_))
+    ));
 
     assert_ordered(generator.next()?, (5_001, 9, 0, normal_tag));
     Ok(())

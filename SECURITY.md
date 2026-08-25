@@ -17,6 +17,13 @@ release candidate. Older release candidates may be asked to upgrade.
 - ZLID-A keys must be high-entropy secrets loaded from secret storage. Decoding
   with the wrong key is not detected; applications own key versioning and
   rotation.
+- Within one key-and-tweak domain, identical source values produce identical
+  aliases, so repeated values are linkable.
+- The public ZLID-A tag reveals the source profile and whether its clock state
+  was normal or clamped.
+- Conformance vectors and differential tests establish wire compatibility, not
+  cryptographic strength. Obtain independent cryptographic review before
+  relying on stronger privacy properties.
 - An omitted partition key is the public all-zero key. Partition values are
   domain labels, not a security boundary.
 - Ordered IDs are deterministically unique per coordinated generator, profile,

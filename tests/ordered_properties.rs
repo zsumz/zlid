@@ -1,6 +1,9 @@
 //! Deterministic boundary and property coverage for ordered wire layouts.
 
-use zlid::{pack_ordered, unpack_ordered, ClockState, Error, Profile};
+use zlid::{
+    wire::{pack_ordered, unpack_ordered, ClockState, OrderedFields},
+    Error, Profile,
+};
 
 const MAX_TIMESTAMP: u64 = (1u64 << 48) - 1;
 
@@ -109,7 +112,7 @@ fn pack_rejects_each_out_of_range_field_and_wrong_tag() {
 
         for tag in 0..=15 {
             if tag != layout.normal_tag && tag != layout.clamped_tag {
-                assert_out_of_range(pack_ordered(layout.profile, 0, 0, 0, 0, tag));
+                assert_invalid_tag(pack_ordered(layout.profile, 0, 0, 0, 0, tag));
             }
         }
     }
@@ -165,11 +168,15 @@ fn assert_round_trip(
 }
 
 fn assert_out_of_range(result: zlid::Result<[u8; 16]>) {
-    assert!(matches!(result, Err(Error::OutOfRange(_))));
+    assert!(matches!(result, Err(Error::FieldOutOfRange { .. })));
 }
 
-fn assert_invalid_family(result: zlid::Result<zlid::OrderedFields>) {
-    assert!(matches!(result, Err(Error::InvalidFamily(_))));
+fn assert_invalid_tag(result: zlid::Result<[u8; 16]>) {
+    assert!(matches!(result, Err(Error::InvalidTag { .. })));
+}
+
+fn assert_invalid_family(result: zlid::Result<OrderedFields>) {
+    assert!(matches!(result, Err(Error::InvalidTag { .. })));
 }
 
 fn next_value(state: &mut u64) -> u64 {

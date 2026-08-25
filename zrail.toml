@@ -137,6 +137,10 @@ name = "assert_ne"
 reason = "Examples verify independently generated identifiers differ."
 
 [[source.rust.macros.allow]]
+name = "debug_assert"
+reason = "Private alias rounds document bit-mask invariants without release overhead."
+
+[[source.rust.macros.allow]]
 name = "format"
 reason = "Errors and test diagnostics construct bounded owned messages."
 

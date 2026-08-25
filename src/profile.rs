@@ -6,6 +6,7 @@ use crate::error::{Error, Result};
 
 /// Ordered ZLID profile.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum Profile {
     /// Twelve sequence bits and a 56-bit random tail.
     Default,
@@ -27,7 +28,7 @@ impl Profile {
         match value {
             "default" => Ok(Profile::Default),
             "high-throughput" => Ok(Profile::HighThroughput),
-            _ => Err(Error::InvalidText(format!("unknown profile {value:?}"))),
+            _ => Err(Error::UnknownProfile(value.to_string())),
         }
     }
 

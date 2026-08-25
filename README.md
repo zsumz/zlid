@@ -12,7 +12,7 @@ Rust 1.88 or newer is required.
 
 ```toml
 [dependencies]
-zlid = "=0.0.1-rc.3"
+zlid = "=0.0.1-rc.4"
 ```
 
 ## Start
@@ -57,7 +57,12 @@ writer, profile, and partition streams are intentionally independent.
 
 ZLID-A is deterministic obfuscation. It is not encryption, authentication, or
 a bearer token. Use a high-entropy secret key; decoding with the wrong key is
-not detected. Key versioning and rotation belong to the application.
+not detected. Key versioning and rotation belong to the application. Within one
+key-and-tweak domain, identical source values produce identical aliases, so
+repeated values are linkable. The public alias tag reveals the source profile
+and whether its clock state was normal or clamped. Conformance vectors and
+differential tests establish compatibility, not cryptographic strength; obtain
+independent cryptographic review before making stronger privacy claims.
 
 An omitted partition key means the public all-zero key. Partition values are
 domain labels, not a security boundary.
@@ -68,8 +73,12 @@ For `wasm32-unknown-unknown`, enable `wasm-js`:
 
 ```toml
 [dependencies]
-zlid = { version = "=0.0.1-rc.3", features = ["wasm-js"] }
+zlid = { version = "=0.0.1-rc.4", features = ["wasm-js"] }
 ```
+
+CI compile-checks `wasm32-unknown-unknown` on Rust 1.88 and stable. Stable CI
+executes ordered and random generation under Node.js. Browser and web-worker
+runtimes are not separately qualified.
 
 ## Qualification
 

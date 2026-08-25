@@ -1,5 +1,5 @@
 use super::HmacSha256;
-use crate::bytes_to_hex;
+use crate::bytes::bytes_to_hex;
 
 fn assert_vector(key: &[u8], parts: &[&[u8]], expected: &str) {
     assert_eq!(bytes_to_hex(&HmacSha256::new(key).digest(parts)), expected);

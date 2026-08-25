@@ -1,4 +1,5 @@
 use super::Inspection;
+use crate::classification::Family;
 use crate::ZLID;
 
 #[test]
@@ -37,4 +38,19 @@ fn alias_inspection_retains_complete_and_payload_hex() {
     };
     assert_eq!(bytes_hex, "FEDCBA9876543210EFCDAB8967452316");
     assert_eq!(alias_data_hex, "FEDCBA9876543210EFCDAB896745231");
+}
+
+#[test]
+fn inspection_reports_semantic_families() {
+    let ordered = ZLID::from_array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]);
+    let random = ZLID::from_array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5]);
+    let alias = ZLID::from_array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6]);
+    let opaque = ZLID::from_array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10]);
+
+    assert_eq!(ordered.inspect().family(), Some(Family::Ordered));
+    assert_eq!(random.inspect().family(), Some(Family::Random));
+    assert_eq!(alias.inspect().family(), Some(Family::Alias));
+    assert_eq!(opaque.inspect().family(), None);
+    assert_eq!(ZLID::NIL.inspect().family(), None);
+    assert_eq!(ZLID::MAX.inspect().family(), None);
 }

@@ -1,6 +1,6 @@
 [package]
 name = "zlid"
-version = "0.0.1-rc.3"
+version = "0.0.1-rc.4"
 edition = "2021"
 rust-version = "1.88"
 description = "Canonical, sortable, collision-resistant identifiers for Rust"

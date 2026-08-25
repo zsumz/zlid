@@ -1,4 +1,4 @@
-use super::{decode_text, encode_text, encode_text_array, encoded_text_str};
+use super::{decode_canonical_text, decode_text, encode_text, encode_text_array, encoded_text_str};
 use crate::constants::{ALPHABET, BYTE_LENGTH, STRING_LENGTH};
 use crate::error::{Error, Result};
 use crate::ZLID;
@@ -19,6 +19,7 @@ fn stack_encoder_matches_the_original_algorithm() {
         let encoded = encode_text_array(&bytes);
         assert_eq!(encoded_text_str(&encoded), expected);
         assert_eq!(encode_text(&bytes), expected);
+        assert_eq!(decode_canonical_text(&expected).unwrap().0, bytes);
     }
 }
 
@@ -60,6 +61,78 @@ fn decoder_matches_original_behavior_for_unicode_and_friendly_text() {
     ] {
         assert_matches_legacy(input);
     }
+}
+
+#[test]
+fn canonical_decoder_accepts_only_canonical_text() {
+    const CANONICAL: &str = "01K2R7KFWE5807000000000001";
+    let expected = decode_text(CANONICAL).unwrap();
+
+    for input in [
+        CANONICAL,
+        "00000000000000000000000000",
+        "7ZZZZZZZZZZZZZZZZZZZZZZZZZ",
+    ] {
+        let decoded = decode_canonical_text(input).unwrap();
+        assert_eq!(encoded_text_str(&encode_text_array(&decoded.0)), input);
+    }
+    assert_eq!(decode_canonical_text(CANONICAL).unwrap(), expected);
+
+    for input in [
+        CANONICAL.to_lowercase(),
+        CANONICAL.replacen('1', "I", 1),
+        CANONICAL.replacen('1', "L", 1),
+        CANONICAL.replacen('0', "O", 1),
+        CANONICAL.replacen('0', "U", 1),
+        format!("{}-{}", &CANONICAL[..13], &CANONICAL[13..]),
+        format!("{}_{}", &CANONICAL[..13], &CANONICAL[13..]),
+        format!("{} {}", &CANONICAL[..13], &CANONICAL[13..]),
+        CANONICAL[..25].to_string(),
+        format!("{CANONICAL}0"),
+        format!("{}é", &CANONICAL[..24]),
+        format!("8{}", &CANONICAL[1..]),
+    ] {
+        assert!(
+            decode_canonical_text(&input).is_err(),
+            "accepted noncanonical input {input:?}"
+        );
+    }
+}
+
+#[test]
+fn canonical_decoder_enforces_the_exact_ascii_alphabet() {
+    const CANONICAL: &str = "01K2R7KFWE5807000000000001";
+
+    for byte in 0u8..=127 {
+        let mut middle = CANONICAL.as_bytes().to_vec();
+        middle[13] = byte;
+        let input = String::from_utf8(middle).unwrap();
+        assert_eq!(
+            decode_canonical_text(&input).is_ok(),
+            ALPHABET.contains(&byte),
+            "middle byte {byte:#04x}"
+        );
+
+        let mut first = CANONICAL.as_bytes().to_vec();
+        first[0] = byte;
+        let input = String::from_utf8(first).unwrap();
+        assert_eq!(
+            decode_canonical_text(&input).is_ok(),
+            matches!(byte, b'0'..=b'7'),
+            "first byte {byte:#04x}"
+        );
+    }
+}
+
+#[test]
+fn friendly_decoder_rejects_at_the_twenty_seventh_symbol() {
+    let input = "000000000000000000000000000U";
+    assert_eq!(
+        decode_text(input),
+        Err(Error::InvalidText(
+            "invalid normalized length (27)".to_string()
+        ))
+    );
 }
 
 fn assert_matches_legacy(input: String) {

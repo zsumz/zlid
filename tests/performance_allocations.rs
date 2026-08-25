@@ -7,8 +7,9 @@ use std::hint::black_box;
 
 use allocation_counter::{measure, AllocationInfo};
 use zlid::{
-    bytes_from_hex, bytes_to_hex, pack_ordered, unpack_ordered, EntropySource, OrderedGenerator,
-    Profile, ZLID,
+    advanced::EntropySource,
+    wire::{pack_ordered, unpack_ordered},
+    OrderedGenerator, Profile, ZLID,
 };
 
 const CANONICAL: &str = "01K2R7KFWE5807000000000001";
@@ -213,7 +214,6 @@ fn alias_round_trips_do_not_allocate() {
 #[test]
 fn owned_text_and_hex_results_allocate_once() {
     let id = ordered();
-    let bytes = id.bytes();
     assert_exact(
         "text",
         1,
@@ -222,17 +222,10 @@ fn owned_text_and_hex_results_allocate_once() {
         }),
     );
     assert_exact(
-        "bytes_hex",
+        "ZLID::bytes_hex",
         1,
         measure(|| {
-            black_box(bytes_to_hex(black_box(&bytes)));
-        }),
-    );
-    assert_exact(
-        "bytes_from_hex",
-        1,
-        measure(|| {
-            black_box(bytes_from_hex(black_box("0011223344556677")).unwrap());
+            black_box(id.bytes_hex());
         }),
     );
 }

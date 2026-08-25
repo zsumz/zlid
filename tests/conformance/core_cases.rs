@@ -1,6 +1,7 @@
 use std::collections::BTreeMap;
 
-use zlid::{bytes_from_hex, bytes_to_hex, pack_ordered, Inspection, ZLID};
+use crate::hex;
+use zlid::{wire::pack_ordered, Inspection, ZLID};
 
 use crate::helpers::{parse_clock_state, parse_profile};
 use crate::json::{get, number, object, string, Json};
@@ -17,7 +18,7 @@ pub(crate) fn assert_ordered_section(entries: &[Json]) {
         let packed =
             pack_ordered(profile, timestamp_ms, partition, sequence, random_tail, tag).unwrap();
 
-        assert_eq!(string(get(entry, "bytesHex")), bytes_to_hex(&packed));
+        assert_eq!(string(get(entry, "bytesHex")), hex::encode(&packed));
 
         let id = ZLID::parse(string(get(entry, "text"))).unwrap();
         assert_eq!(packed, id.bytes());
@@ -53,7 +54,7 @@ pub(crate) fn assert_ordered_section(entries: &[Json]) {
 pub(crate) fn assert_random_section(entries: &[Json]) {
     for entry in entries {
         let entry = object(entry);
-        let entropy = bytes_from_hex(string(get(entry, "inputEntropyHex"))).unwrap();
+        let entropy = hex::decode(string(get(entry, "inputEntropyHex"))).unwrap();
         let mut source = |size: usize| {
             assert_eq!(entropy.len(), size);
             entropy.clone()
@@ -75,26 +76,29 @@ pub(crate) fn assert_random_section(entries: &[Json]) {
 }
 
 pub(crate) fn assert_alias_section(domain: &BTreeMap<String, Json>, entries: &[Json]) {
-    let key = bytes_from_hex(string(get(domain, "keyHex"))).unwrap();
+    let key = hex::decode(string(get(domain, "keyHex"))).unwrap();
     let tweak = string(get(domain, "tweakUtf8"));
 
     for entry in entries {
         let entry = object(entry);
         let source =
-            ZLID::from_bytes(&bytes_from_hex(string(get(entry, "sourceBytesHex"))).unwrap())
-                .unwrap();
+            ZLID::from_bytes(&hex::decode(string(get(entry, "sourceBytesHex"))).unwrap()).unwrap();
         assert_eq!(string(get(entry, "sourceText")), source.text());
 
         let tweak_hex = entry.get("tweakHex").map(string);
         let alias = if let Some(hex) = tweak_hex {
-            source.alias(&key, &bytes_from_hex(hex).unwrap()).unwrap()
+            source
+                .alias(&key, &crate::hex::decode(hex).unwrap())
+                .unwrap()
         } else {
             source.alias_str(&key, tweak).unwrap()
         };
         assert_eq!(string(get(entry, "bytesHex")), alias.bytes_hex());
         assert_eq!(string(get(entry, "text")), alias.text());
         let unaliased = if let Some(hex) = tweak_hex {
-            alias.unalias(&key, &bytes_from_hex(hex).unwrap()).unwrap()
+            alias
+                .unalias(&key, &crate::hex::decode(hex).unwrap())
+                .unwrap()
         } else {
             alias.unalias_str(&key, tweak).unwrap()
         };

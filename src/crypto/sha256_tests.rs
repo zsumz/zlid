@@ -1,5 +1,5 @@
 use super::sha256;
-use crate::bytes_to_hex;
+use crate::bytes::bytes_to_hex;
 
 const GOLDEN_FIXTURE: &[u8] = include_bytes!("../../conformance/zlid-v0.1-golden.json");
 const GOLDEN_FIXTURE_SHA256: &str =

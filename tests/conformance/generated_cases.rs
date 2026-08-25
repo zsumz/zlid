@@ -2,9 +2,11 @@ use std::cell::RefCell;
 use std::collections::{BTreeMap, VecDeque};
 use std::rc::Rc;
 
+use crate::hex;
 use zlid::{
-    bytes_from_hex, ClockState, Inspection, OrderedEvent, OrderedGenerator, OrderedGeneratorCore,
-    Profile, ZLID,
+    advanced::{OrderedEvent, OrderedGeneratorCore},
+    wire::ClockState,
+    Inspection, OrderedGenerator, Profile, ZLID,
 };
 
 use crate::helpers::parse_profile;
@@ -19,7 +21,7 @@ pub(crate) fn assert_generated_section(entries: &[Json]) {
         let warmup_now_ms = entry.get("warmupNowMs").map(number).unwrap_or(0) as u64;
         let warmup_entropy = entry
             .get("warmupEntropyHex")
-            .map(|value| bytes_from_hex(string(value)).unwrap());
+            .map(|value| hex::decode(string(value)).unwrap());
         let times: Rc<RefCell<VecDeque<u64>>> = Rc::new(RefCell::new(
             array(get(entry, "nowMs"))
                 .iter()
@@ -29,7 +31,7 @@ pub(crate) fn assert_generated_section(entries: &[Json]) {
         let entropy_chunks: Rc<RefCell<VecDeque<Vec<u8>>>> = Rc::new(RefCell::new(
             array(get(entry, "entropyHex"))
                 .iter()
-                .map(|value| bytes_from_hex(string(value)).unwrap())
+                .map(|value| hex::decode(string(value)).unwrap())
                 .collect(),
         ));
 

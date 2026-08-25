@@ -1,6 +1,6 @@
 //! Boundary and family-matrix coverage for reversible aliases.
 
-use zlid::{pack_ordered, Error, Profile, ZLID};
+use zlid::{wire::pack_ordered, Error, Profile, ZLID};
 
 const SOURCE_CASES: [(Profile, u8, u8); 4] = [
     (Profile::Default, 1, 6),
@@ -47,15 +47,15 @@ fn tweak_limit_is_measured_in_bytes_including_for_utf8_helpers() {
             .expect("65,535 UTF-8 bytes are valid"),
         source
     );
-    assert_invalid_family(source.alias_str(key, &rejected_text));
-    assert_invalid_family(alias.unalias_str(key, &rejected_text));
+    assert_tweak_too_long(source.alias_str(key, &rejected_text), rejected_text.len());
+    assert_tweak_too_long(alias.unalias_str(key, &rejected_text), rejected_text.len());
 
     let oversized = vec![0; 65_536];
     for (profile, source_tag, _) in SOURCE_CASES {
         let source = ordered_source(profile, source_tag);
         let alias = source.alias(key, b"").expect("valid alias");
-        assert_invalid_family(source.alias(key, &oversized));
-        assert_invalid_family(alias.unalias(key, &oversized));
+        assert_tweak_too_long(source.alias(key, &oversized), oversized.len());
+        assert_tweak_too_long(alias.unalias(key, &oversized), oversized.len());
     }
 }
 
@@ -77,8 +77,8 @@ fn alias_and_unalias_accept_exactly_their_defined_tag_families() {
     }
 
     for sentinel in [ZLID::NIL, ZLID::MAX] {
-        assert_invalid_family(sentinel.alias(key, b""));
-        assert_invalid_family(sentinel.unalias(key, b""));
+        assert_invalid_tag(sentinel.alias(key, b""));
+        assert_invalid_tag(sentinel.unalias(key, b""));
     }
 }
 
@@ -87,8 +87,8 @@ fn empty_alias_keys_are_rejected_for_both_directions() {
     let source = ordered_source(Profile::Default, 1);
     let alias = source.alias(b"valid", b"").expect("valid alias");
 
-    assert_invalid_family(source.alias(b"", b""));
-    assert_invalid_family(alias.unalias(b"", b""));
+    assert!(matches!(source.alias(b"", b""), Err(Error::EmptyAliasKey)));
+    assert!(matches!(alias.unalias(b"", b""), Err(Error::EmptyAliasKey)));
 }
 
 #[test]
@@ -122,6 +122,16 @@ fn value_with_tag(tag: u8) -> ZLID {
     ZLID::from_array(bytes)
 }
 
-fn assert_invalid_family(result: zlid::Result<ZLID>) {
-    assert!(matches!(result, Err(Error::InvalidFamily(_))));
+fn assert_invalid_tag(result: zlid::Result<ZLID>) {
+    assert!(matches!(result, Err(Error::InvalidTag { .. })));
+}
+
+fn assert_tweak_too_long(result: zlid::Result<ZLID>, actual: usize) {
+    assert!(matches!(
+        result,
+        Err(Error::TweakTooLong {
+            maximum: 65_535,
+            actual: observed,
+        }) if observed == actual
+    ));
 }

@@ -1,0 +1,44 @@
+[package]
+name = "zlid-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+license = "Apache-2.0"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "=0.4.13"
+zlid = { path = "..", version = "=0.0.1-rc.4" }
+
+[workspace]
+members = ["."]
+
+[[bin]]
+name = "parse-text"
+path = "fuzz_targets/parse_text.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "value-roundtrip"
+path = "fuzz_targets/value_roundtrip.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "ordered-wire"
+path = "fuzz_targets/ordered_wire.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "alias-inversion"
+path = "fuzz_targets/alias_inversion.rs"
+test = false
+doc = false
+bench = false

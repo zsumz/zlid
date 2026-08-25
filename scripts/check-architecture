@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 failure=0
+rust_roots=("$ROOT/src" "$ROOT/tests" "$ROOT/fuzz/fuzz_targets")
 
 while IFS= read -r -d '' file; do
   relative="${file#"$ROOT/"}"
@@ -15,14 +16,14 @@ while IFS= read -r -d '' file; do
     echo "$relative has $lines lines; limit is $limit" >&2
     failure=1
   fi
-done < <(find "$ROOT/src" "$ROOT/tests" -type f -name '*.rs' -print0)
+done < <(find "${rust_roots[@]}" -type f -name '*.rs' -print0)
 
-if rg -n '\bunsafe\b' "$ROOT/src"; then
+if rg -n '\bunsafe\b' "$ROOT/src" "$ROOT/fuzz/fuzz_targets"; then
   echo "unsafe Rust is not allowed" >&2
   failure=1
 fi
 
-if rg -n 'todo!|unimplemented!' "$ROOT/src" "$ROOT/tests"; then
+if rg -n 'todo!|unimplemented!' "${rust_roots[@]}"; then
   echo "unfinished Rust macros are not allowed" >&2
   failure=1
 fi

@@ -1,6 +1,7 @@
 use std::collections::BTreeMap;
 
-use zlid::{bytes_from_hex, Inspection, InspectionKind, ZLID};
+use crate::hex;
+use zlid::{Inspection, InspectionKind, ZLID};
 
 use crate::helpers::{ordering_sign, parse_sentinel_name};
 use crate::json::{array, get, number, object, string, Json};
@@ -8,8 +9,7 @@ use crate::json::{array, get, number, object, string, Json};
 pub(crate) fn assert_sentinel_section(entries: &[Json]) {
     for entry in entries {
         let entry = object(entry);
-        let id =
-            ZLID::from_bytes(&bytes_from_hex(string(get(entry, "bytesHex"))).unwrap()).unwrap();
+        let id = ZLID::from_bytes(&hex::decode(string(get(entry, "bytesHex"))).unwrap()).unwrap();
         assert_eq!(string(get(entry, "text")), id.text());
         assert_eq!(
             id.bytes(),
@@ -33,8 +33,7 @@ pub(crate) fn assert_sentinel_section(entries: &[Json]) {
 pub(crate) fn assert_opaque_section(entries: &[Json]) {
     for entry in entries {
         let entry = object(entry);
-        let id =
-            ZLID::from_bytes(&bytes_from_hex(string(get(entry, "bytesHex"))).unwrap()).unwrap();
+        let id = ZLID::from_bytes(&hex::decode(string(get(entry, "bytesHex"))).unwrap()).unwrap();
         assert_eq!(string(get(entry, "text")), id.text());
         assert_eq!(
             id.bytes(),
@@ -76,9 +75,9 @@ pub(crate) fn assert_invalid_operations(entries: &[Json]) {
         let result = match string(get(entry, "operation")) {
             "alias" => {
                 let source = ZLID::parse(string(get(entry, "sourceText"))).unwrap();
-                let key = bytes_from_hex(string(get(entry, "keyHex"))).unwrap();
+                let key = hex::decode(string(get(entry, "keyHex"))).unwrap();
                 if let Some(tweak_hex) = entry.get("tweakHex") {
-                    let tweak = bytes_from_hex(string(tweak_hex)).unwrap();
+                    let tweak = hex::decode(string(tweak_hex)).unwrap();
                     source.alias(&key, &tweak).map(|_| ())
                 } else {
                     source
@@ -88,9 +87,9 @@ pub(crate) fn assert_invalid_operations(entries: &[Json]) {
             }
             "unalias" => {
                 let alias = ZLID::parse(string(get(entry, "sourceText"))).unwrap();
-                let key = bytes_from_hex(string(get(entry, "keyHex"))).unwrap();
+                let key = hex::decode(string(get(entry, "keyHex"))).unwrap();
                 if let Some(tweak_hex) = entry.get("tweakHex") {
-                    let tweak = bytes_from_hex(string(tweak_hex)).unwrap();
+                    let tweak = hex::decode(string(tweak_hex)).unwrap();
                     alias.unalias(&key, &tweak).map(|_| ())
                 } else {
                     alias
@@ -99,16 +98,16 @@ pub(crate) fn assert_invalid_operations(entries: &[Json]) {
                 }
             }
             "partition" => {
-                let key = bytes_from_hex(string(get(entry, "keyHex"))).unwrap();
+                let key = hex::decode(string(get(entry, "keyHex"))).unwrap();
                 if let Some(input) = entry.get("inputUtf8") {
                     ZLID::partition_str(string(input), Some(&key)).map(|_| ())
                 } else {
-                    let input = bytes_from_hex(string(get(entry, "inputHex"))).unwrap();
+                    let input = hex::decode(string(get(entry, "inputHex"))).unwrap();
                     ZLID::partition_bytes(&input, Some(&key)).map(|_| ())
                 }
             }
             "fromBytes" => {
-                let input = bytes_from_hex(string(get(entry, "inputHex"))).unwrap();
+                let input = hex::decode(string(get(entry, "inputHex"))).unwrap();
                 ZLID::from_bytes(&input).map(|_| ())
             }
             other => panic!("unknown invalid operation {other}"),
@@ -130,22 +129,22 @@ pub(crate) fn assert_partition_section(partition: &BTreeMap<String, Json>) {
             if uses_default_key {
                 ZLID::partition_str(string(value), None).unwrap()
             } else {
-                let key = bytes_from_hex(string(get(entry, "keyHex"))).unwrap();
+                let key = hex::decode(string(get(entry, "keyHex"))).unwrap();
                 ZLID::partition_str(string(value), Some(&key)).unwrap()
             }
         } else {
-            let input = bytes_from_hex(string(get(entry, "inputHex"))).unwrap();
+            let input = hex::decode(string(get(entry, "inputHex"))).unwrap();
             if uses_default_key {
                 ZLID::partition_bytes(&input, None).unwrap()
             } else {
-                let key = bytes_from_hex(string(get(entry, "keyHex"))).unwrap();
+                let key = hex::decode(string(get(entry, "keyHex"))).unwrap();
                 ZLID::partition_bytes(&input, Some(&key)).unwrap()
             }
         };
         assert_eq!(number(get(entry, "output")) as u8, actual);
 
         if entry.get("keyHex").map(string) == Some("00000000000000000000000000000000") {
-            let input = bytes_from_hex(string(get(entry, "inputHex"))).unwrap();
+            let input = hex::decode(string(get(entry, "inputHex"))).unwrap();
             assert_eq!(actual, ZLID::partition_bytes(&input, None).unwrap());
         }
     }
@@ -164,7 +163,5 @@ pub(crate) fn assert_compare_section(entries: &[Json]) {
             -(number(get(entry, "expected")) as i8),
             ordering_sign(right.cmp(&left))
         );
-        assert_eq!(left.cmp(&right), ZLID::compare(&left, &right));
-        assert_eq!(right.cmp(&left), ZLID::compare(&right, &left));
     }
 }

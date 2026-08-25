@@ -44,13 +44,13 @@ zlid = { path = "$package_root" }
 EOF
 
 cat > "$audit_dir/consumer/src/main.rs" <<'EOF'
-use zlid::{Inspection, Profile, ZLID};
+use zlid::{Inspection, OrderedGenerator, Profile, ZLID};
 
 fn main() -> zlid::Result<()> {
     let parsed = ZLID::parse("01k2r7-kfwe58 07000000000001")?;
     assert_eq!(parsed.text(), "01K2R7KFWE5807000000000001");
 
-    let generated = ZLID::generator(Profile::Default, 42).next()?;
+    let generated = OrderedGenerator::new(Profile::Default, 42).next()?;
     assert!(matches!(generated.inspect(), Inspection::Ordered { partition: 42, .. }));
     assert!(matches!(ZLID::random()?.inspect(), Inspection::Random { .. }));
     Ok(())

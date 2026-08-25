@@ -21,6 +21,7 @@ impl ClockState {
 
 /// A decoded ordered payload.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct OrderedFields {
     /// Ordered layout profile.
     pub profile: Profile,
@@ -40,6 +41,7 @@ pub struct OrderedFields {
 
 /// Generator event before the random tail is packed.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct OrderedEvent {
     /// Milliseconds since the Unix epoch.
     pub timestamp_ms: u64,

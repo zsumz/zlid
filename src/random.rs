@@ -61,8 +61,7 @@ pub(crate) fn random_value<E: EntropySource>(source: &mut E, bit_count: u8) -> R
 }
 
 fn fill_system_random(out: &mut [u8]) -> Result<()> {
-    getrandom::fill(out)
-        .map_err(|error| Error::Random(format!("system entropy unavailable: {error}")))
+    getrandom::fill(out).map_err(|error| Error::EntropyUnavailable(error.to_string()))
 }
 
 #[cfg(test)]

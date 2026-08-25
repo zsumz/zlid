@@ -61,11 +61,6 @@ where
         self.next_event_and_pack(Some(partition))
     }
 
-    /// Emits the next deterministic event without drawing or packing entropy.
-    pub fn next_event(&mut self, partition: Option<u8>) -> Result<OrderedEvent> {
-        self.core.next(partition)
-    }
-
     fn next_event_and_pack(&mut self, partition: Option<u8>) -> Result<ZLID> {
         let prepared = self.core.prepare_next(partition)?;
         let spec = self.core.profile().spec();
@@ -213,20 +208,32 @@ pub fn pack_ordered(
 ) -> Result<[u8; BYTE_LENGTH]> {
     let spec = profile.spec();
     if timestamp_ms > MAX_TS {
-        return Err(Error::OutOfRange("ts_ms must be in 0..2^48-1"));
+        return Err(Error::FieldOutOfRange {
+            field: "timestamp_ms",
+            maximum: MAX_TS,
+            actual: timestamp_ms,
+        });
     }
     if sequence > spec.seq_max {
-        return Err(Error::OutOfRange("sequence exceeds selected profile limit"));
+        return Err(Error::FieldOutOfRange {
+            field: "sequence",
+            maximum: u64::from(spec.seq_max),
+            actual: u64::from(sequence),
+        });
     }
     if random_tail > max_value_for_bits(spec.rand_bits) {
-        return Err(Error::OutOfRange(
-            "random tail exceeds selected profile bit width",
-        ));
+        return Err(Error::FieldOutOfRange {
+            field: "random_tail",
+            maximum: max_value_for_bits(spec.rand_bits),
+            actual: random_tail,
+        });
     }
     if tag != spec.normal_tag && tag != spec.clamped_tag {
-        return Err(Error::OutOfRange(
-            "ordered tag does not match selected profile",
-        ));
+        return Err(Error::InvalidTag {
+            operation: "pack ordered fields",
+            expected: "a tag for the selected ordered profile",
+            actual: tag,
+        });
     }
 
     let value = (u128::from(timestamp_ms) << 80)
@@ -241,8 +248,11 @@ pub fn pack_ordered(
 pub fn unpack_ordered(bytes: &[u8; BYTE_LENGTH]) -> Result<OrderedFields> {
     let value = u128::from_be_bytes(*bytes);
     let tag = (value & 0x0f) as u8;
-    let profile = ordered_profile_from_tag(tag)
-        .ok_or(Error::InvalidFamily("input is not an ordered ZLID"))?;
+    let profile = ordered_profile_from_tag(tag).ok_or(Error::InvalidTag {
+        operation: "unpack ordered fields",
+        expected: "an ordered ZLID tag",
+        actual: tag,
+    })?;
     let spec = profile.spec();
     let sequence_mask = (1u128 << sequence_bits(profile)) - 1;
     let random_mask = (1u128 << spec.rand_bits) - 1;

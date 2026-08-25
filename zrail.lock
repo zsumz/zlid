@@ -2,19 +2,19 @@
 schema = 2
 semantics = 3
 producer = "0.0.3-rc.4"
-contract_sha256 = "011d401e0aaa39b49445309b91f78309d615845c327da92e34f2096e75787f90"
+contract_sha256 = "37dc9a8587365b2efc2b04cc0f2d175a72e6bc01f811cc768e500e142d5b8ebc"
 ratchet = []
 
 [analysis]
-inventory_sha256 = "6591befcc4b32540773acf4b43d6ff620c38e8a5365bc9f82fdaa376fa6fe049"
+inventory_sha256 = "d99fd6df3028f6cbfd271965c86e05278ddb2650a3c3c1670c48c83c8017da02"
 exclusions_sha256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-cargo_lock_sha256 = "a5f2838c45ca2ee0553591683efcd2fbcbf5ef180e5b4ec30aee9a8c689d6b21"
+cargo_lock_sha256 = "676c98a8048b3ec37a752cc6a24240c87b806bdbfb679ccdbbc4f0e2964172dd"
 packages = 1
-targets = 15
-physical_rust_files = 52
-base_source_contexts = 71
+targets = 16
+physical_rust_files = 58
+base_source_contexts = 81
 derived_source_contexts = 0
-source_facts = 16603
+source_facts = 17500
 projection_queries = 0
 projected_facts = 0
 unresolved_bindings = 0
@@ -22,7 +22,7 @@ analyzer_semantics = 3
 
 [[analysis.contract_source]]
 path = "zrail.toml"
-sha256 = "aecf23761b3f3fb834e039fadbb843aeb96d5ec2ed2a722ceb64c5830bb9ccc8"
+sha256 = "3117c112950d3dc9fcdfe8d0273d88daf13f18c9a256f57f087bf201f7f0c512"
 
 [[package]]
 name = "zlid"

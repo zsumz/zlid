@@ -153,3 +153,27 @@ jobs:
           profile: minimal
           update: false
       - run: cargo test --locked --all-targets
+
+  required:
+    name: required
+    if: ${{ always() }}
+    needs: [release-gate, msrv, wasm, platform]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - name: Require every CI job group
+        env:
+          MSRV_RESULT: ${{ needs.msrv.result }}
+          PLATFORM_RESULT: ${{ needs.platform.result }}
+          RELEASE_GATE_RESULT: ${{ needs.release-gate.result }}
+          WASM_RESULT: ${{ needs.wasm.result }}
+        run: |
+          printf '%s\n' \
+            "release-gate=$RELEASE_GATE_RESULT" \
+            "msrv=$MSRV_RESULT" \
+            "wasm=$WASM_RESULT" \
+            "platform=$PLATFORM_RESULT"
+          test "$RELEASE_GATE_RESULT" = success
+          test "$MSRV_RESULT" = success
+          test "$WASM_RESULT" = success
+          test "$PLATFORM_RESULT" = success

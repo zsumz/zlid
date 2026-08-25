@@ -25,10 +25,7 @@ impl SharedOrderedGenerator {
 
     fn next_with_entropy<E: EntropySource>(&self, partition: u8, entropy: &mut E) -> Result<ZLID> {
         let random_tail = random_value(entropy, Profile::Default.spec().rand_bits)?;
-        let mut core = self
-            .0
-            .lock()
-            .map_err(|_| Error::Clock("default generator lock is poisoned".to_string()))?;
+        let mut core = self.0.lock().map_err(|_| Error::GeneratorPoisoned)?;
         core.next_with_random_tail(Some(partition), random_tail)
     }
 }

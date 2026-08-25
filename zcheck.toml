@@ -89,6 +89,24 @@ resources = ["cargo-target"]
 description = "Validate runtime, API, and documentation behavior."
 needs = ["test", "doctest", "example", "benchmark-compile"]
 
+[tasks.fuzz-format]
+description = "Validate formatting in the isolated fuzz workspace."
+run = ["cargo", "fmt", "--manifest-path", "fuzz/Cargo.toml", "--package", "zlid-fuzz", "--", "--check"]
+tools = ["cargo"]
+inputs = ["fuzz/Cargo.toml", "fuzz/fuzz_targets"]
+
+[tasks.fuzz-clippy]
+description = "Compile and lint every isolated fuzz target."
+run = ["cargo", "clippy", "--manifest-path", "fuzz/Cargo.toml", "--locked", "--all-targets", "--", "-D", "warnings"]
+env = { CARGO_TARGET_DIR = "target/fuzz-zcheck" }
+tools = ["cargo"]
+resources = ["cargo-target"]
+inputs = ["fuzz/Cargo.toml", "fuzz/Cargo.lock", "fuzz/fuzz_targets"]
+
+[tasks.fuzz-check]
+description = "Validate the isolated persistent-fuzzing workspace."
+needs = ["fuzz-format", "fuzz-clippy"]
+
 [tasks.package]
 description = "Build and inspect the publishable crate archive."
 run = ["scripts/check-package", "--allow-dirty"]
@@ -98,4 +116,4 @@ inputs = ["scripts/check-package", "Cargo.toml", "Cargo.lock", "README.md", "CHA
 
 [tasks.check]
 description = "Run complete local ZLID qualification."
-needs = ["architecture", "metadata", "rust-lint", "rust-test", "package"]
+needs = ["architecture", "metadata", "rust-lint", "rust-test", "fuzz-check", "package"]

@@ -1,10 +1,12 @@
 //! Differential checks against output fingerprints captured from published rc2.
 
+#[path = "support/hex.rs"]
+mod hex;
 #[path = "support/legacy_alias.rs"]
 mod legacy_alias;
 
 use sha2::{Digest, Sha256};
-use zlid::{bytes_from_hex, bytes_to_hex, ZLID};
+use zlid::ZLID;
 
 const SOURCE: [u8; 16] = [
     0x01, 0x98, 0xb0, 0x79, 0xbf, 0x8e, 0xab, 0xab, 0xc1, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xe1,
@@ -51,14 +53,14 @@ fn optimized_alias_matches_rc2_boundary_oracle() {
             assert_eq!(alias.unalias(&key, &tweak).unwrap(), source);
             fingerprint.update(alias.as_bytes());
         }
-        assert_eq!(bytes_to_hex(&fingerprint.finalize()), expected);
+        assert_eq!(hex::encode(&fingerprint.finalize()), expected);
     }
 }
 
 #[test]
 fn optimized_alias_is_byte_exact_with_removed_implementation() {
     for (source_hex, source_tag, alias_tag) in ORDERED_SOURCES {
-        let source_bytes = bytes_from_hex(source_hex).unwrap();
+        let source_bytes = hex::decode(source_hex).unwrap();
         let source = ZLID::from_bytes(&source_bytes).unwrap();
         for key_length in [1, 16, 63, 64, 65, 131] {
             let key = generated_bytes(key_length, 37, 11);

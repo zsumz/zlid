@@ -28,6 +28,7 @@ required=(
   "tests/alias_boundaries.rs"
   "tests/alias_differential.rs"
   "tests/api.rs"
+  "tests/classification_allocations.rs"
   "tests/conformance.rs"
   "tests/ordered_boundaries.rs"
   "tests/ordered_failure_atomicity.rs"
@@ -35,6 +36,7 @@ required=(
   "tests/performance_allocations.rs"
   "tests/shared_generation.rs"
   "tests/support/legacy_alias.rs"
+  "tests/support/hex.rs"
   "tests/support/legacy_sha256.rs"
   "tests/value_properties.rs"
   "tests/wasm_runtime.rs"
@@ -47,7 +49,7 @@ for file in "${required[@]}"; do
   fi
 done
 
-for forbidden in ".github/" "scripts/" "target/" ".DS_Store" "AGENTS.md"; do
+for forbidden in ".github/" "fuzz/" "scripts/" "target/" ".DS_Store" "AGENTS.md"; do
   if grep -Fq "$forbidden" <<<"$listing"; then
     echo "package unexpectedly contains $forbidden" >&2
     exit 1

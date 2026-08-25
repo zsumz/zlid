@@ -1,0 +1,72 @@
+name: Fuzz
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "37 5 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fuzz-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: "1"
+
+jobs:
+  fuzz:
+    name: fuzz / ${{ matrix.target }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: parse-text
+            max_length: 4096
+          - target: value-roundtrip
+            max_length: 16
+          - target: ordered-wire
+            max_length: 64
+          - target: alias-inversion
+            max_length: 8192
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: zactionsz/setup-rust@8a57ecfd865b04df6fd794ba3a40049c2c563867
+        with:
+          toolchain: nightly-2026-08-01
+          profile: minimal
+          components: rust-src
+          update: false
+      - name: Install pinned cargo-fuzz
+        run: cargo install cargo-fuzz --version 0.13.2 --locked
+      - name: Verify cargo-fuzz
+        run: test "$(cargo +nightly-2026-08-01 fuzz --version)" = "cargo-fuzz 0.13.2"
+      - name: Fetch locked fuzz dependencies
+        run: cargo fetch --manifest-path fuzz/Cargo.toml --locked
+      - name: Run bounded fuzz target
+        env:
+          FUZZ_MAX_LENGTH: ${{ matrix.max_length }}
+          FUZZ_TARGET: ${{ matrix.target }}
+        run: |
+          artifact_dir="fuzz/artifacts/$FUZZ_TARGET"
+          mkdir -p "$artifact_dir"
+          cargo +nightly-2026-08-01 fuzz run "$FUZZ_TARGET" -- \
+            -max_total_time=180 \
+            -timeout=10 \
+            -rss_limit_mb=4096 \
+            -max_len="$FUZZ_MAX_LENGTH" \
+            -artifact_prefix="$artifact_dir/"
+      - name: Upload crash artifacts
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: fuzz-${{ matrix.target }}-artifacts
+          path: fuzz/artifacts/${{ matrix.target }}/
+          if-no-files-found: ignore
+          retention-days: 14

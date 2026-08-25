@@ -14,7 +14,9 @@ impl EntropySource for SignalingEntropy {
     fn fill_bytes(&mut self, out: &mut [u8]) -> crate::Result<()> {
         self.signal.send(out.len()).expect("signal receiver");
         if self.fail {
-            return Err(Error::Random("injected entropy failure".to_string()));
+            return Err(Error::EntropyUnavailable(
+                "injected entropy failure".to_string(),
+            ));
         }
         out.fill(0);
         Ok(())
@@ -75,7 +77,7 @@ fn entropy_failure_neither_waits_for_the_lock_nor_initializes_state() {
     assert_eq!(entropy_rx.recv_timeout(Duration::from_secs(1)).unwrap(), 7);
     assert!(matches!(
         result_rx.recv_timeout(Duration::from_secs(1)).unwrap(),
-        Err(Error::Random(_))
+        Err(Error::EntropyUnavailable(_))
     ));
     drop(guard);
     handle.join().expect("generation thread");
@@ -104,7 +106,7 @@ fn invalid_predrawn_tail_does_not_initialize_stream() {
 
     assert!(matches!(
         core.next_with_random_tail(Some(43), u64::MAX),
-        Err(Error::OutOfRange(_))
+        Err(Error::FieldOutOfRange { .. })
     ));
     let id = core.next_with_random_tail(Some(43), 0).unwrap();
     let Inspection::Ordered {

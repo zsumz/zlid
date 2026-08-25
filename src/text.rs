@@ -50,9 +50,14 @@ pub(crate) fn decode_text(input: &str) -> Result<ZLID> {
             let character = (byte as char).to_ascii_uppercase();
             Error::InvalidText(format!("invalid alphabet character {character:?}"))
         })?;
+        normalized_length += 1;
+        if normalized_length > STRING_LENGTH {
+            return Err(Error::InvalidText(format!(
+                "invalid normalized length ({normalized_length})"
+            )));
+        }
         first_symbol.get_or_insert(symbol);
         value = (value << 5) | u128::from(symbol);
-        normalized_length += 1;
     }
 
     if normalized_length != STRING_LENGTH {
@@ -67,6 +72,50 @@ pub(crate) fn decode_text(input: &str) -> Result<ZLID> {
     }
 
     Ok(ZLID(value.to_be_bytes()))
+}
+
+pub(crate) fn decode_canonical_text(input: &str) -> Result<ZLID> {
+    if input.len() != STRING_LENGTH {
+        return Err(Error::InvalidText(format!(
+            "invalid canonical length ({})",
+            input.len()
+        )));
+    }
+
+    let mut value = 0u128;
+    for (index, byte) in input.bytes().enumerate() {
+        if !byte.is_ascii() {
+            return Err(canonical_symbol_error(input, index, byte));
+        }
+        let symbol = decode_symbol(byte)
+            .filter(|symbol| ALPHABET[usize::from(*symbol)] == byte)
+            .ok_or_else(|| canonical_symbol_error(input, index, byte))?;
+        if index == 0 && symbol > 7 {
+            return Err(Error::InvalidText(
+                "first character outside 0..7".to_string(),
+            ));
+        }
+        value = (value << 5) | u128::from(symbol);
+    }
+
+    Ok(ZLID(value.to_be_bytes()))
+}
+
+fn canonical_symbol_error(input: &str, offset: usize, byte: u8) -> Error {
+    if byte.is_ascii() {
+        return Error::InvalidText(format!(
+            "invalid canonical alphabet character {:?}",
+            byte as char
+        ));
+    }
+
+    let character = input[offset..]
+        .chars()
+        .next()
+        .expect("the byte belongs to the input string");
+    Error::InvalidText(format!(
+        "invalid non-ASCII alphabet character {character:?}"
+    ))
 }
 
 fn decode_symbol(byte: u8) -> Option<u8> {

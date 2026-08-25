@@ -2,6 +2,17 @@
 
 All notable changes to this project are documented here.
 
+## 0.0.1-rc.4 - 2026-08-25
+
+- Finalized `ZLID` as the sole value type and reorganized low-level wire and
+  injectable generator seams under `wire` and `advanced` modules.
+- Added semantic non-exhaustive errors, explicit representation constants,
+  strict canonical parsing, and allocation-free family classification.
+- Added scheduled fuzzing and same-runner release benchmark evidence while
+  preserving every ZLID v0.1 wire byte and generator-state transition.
+- Documented deterministic alias linkability, visible alias tag metadata, and
+  the current Node.js WebAssembly runtime evidence boundary.
+
 ## 0.0.1-rc.3 - 2026-08-25
 
 - Replaced allocation-heavy alias hashing with streaming RustCrypto

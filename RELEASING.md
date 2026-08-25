@@ -3,6 +3,9 @@
 ZLID releases are built from a clean, signed commit and published from the
 matching signed tag.
 
+Publishing a stable version requires explicit maintainer confirmation of both
+the version and the stable-release intent.
+
 ## Candidate
 
 1. Confirm `Cargo.toml`, README examples, and `CHANGELOG.md` agree on the package
@@ -15,10 +18,10 @@ matching signed tag.
 
 ## Publish
 
-1. Create and verify the signed tag `v<version>`.
+1. Create a signed annotated tag `v<version>`. Verify both the tag object's
+   signature and the signature of the commit it resolves to.
 2. Push the commit and tag; wait for required CI to pass.
 3. Run `cargo publish --locked` only after explicit release approval.
-4. Add a second crates.io owner or organization team after the first publish.
 
 ## Public proof
 
