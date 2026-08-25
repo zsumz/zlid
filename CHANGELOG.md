@@ -8,10 +8,27 @@ All notable changes to this project are documented here.
   injectable generator seams under `wire` and `advanced` modules.
 - Added semantic non-exhaustive errors, explicit representation constants,
   strict canonical parsing, and allocation-free family classification.
-- Added scheduled fuzzing and same-runner release benchmark evidence while
+- Added scheduled fuzzing and an advisory same-runner benchmark workflow while
   preserving every ZLID v0.1 wire byte and generator-state transition.
 - Documented deterministic alias linkability, visible alias tag metadata, and
   the current Node.js WebAssembly runtime evidence boundary.
+
+### Migration from rc.3
+
+- Use `ZLID`; the temporary `Zlid` compatibility alias was removed.
+- Import packing types and functions from `zlid::wire`, and injected clocks,
+  entropy sources, and generator-core types from `zlid::advanced`.
+- Replace `ZLID::compare` with `Ord::cmp`, free partition helpers with the
+  associated `ZLID::partition_*` methods, and removed generator factories with
+  `OrderedGenerator::{new,with_profile,default}`.
+- Generic hexadecimal helpers are no longer public; use `ZLID::bytes_hex` for
+  display and application-owned decoding when constructing arbitrary bytes.
+- Replace `OrderedGenerator::next_event` with
+  `advanced::OrderedGeneratorCore::next` when deterministic events are needed.
+- `Inspection::family()` now returns `Option<Family>`, and evolving public
+  enums and structs require wildcard handling because they are non-exhaustive.
+- Match the new semantic `Error` variants instead of the removed
+  `OutOfRange`, `InvalidFamily`, and `Random` variants.
 
 ## 0.0.1-rc.3 - 2026-08-25
 

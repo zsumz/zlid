@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ $# -ne 2 ]]; then
+  echo "usage: scripts/compare-benchmarks <baseline.txt> <candidate.txt>" >&2
+  exit 2
+fi
+
+baseline="$1"
+candidate="$2"
+regression_ratio="${BENCHMARK_REGRESSION_RATIO:-1.20}"
+
+awk -v ratio="$regression_ratio" '
+function normalize(label) {
+  if (label == "ordered explicit 4t") return "explicit distinct 4t"
+  if (label == "ordered shared 4t") return "shared distinct 4t"
+  return label
+}
+function read_metric(    column, metric_column) {
+  metric = ""
+  value = 0
+  label = ""
+  for (column = 2; column <= NF; column++) {
+    if ($column == "ns/op" || $column == "ops/s") {
+      metric = $column
+      value = $(column - 1) + 0
+      metric_column = column
+      break
+    }
+  }
+  for (column = 2; column < metric_column - 1; column++) {
+    label = label (label == "" ? "" : " ") $column
+  }
+  label = normalize(label)
+}
+FNR == NR {
+  read_metric()
+  if (metric != "") baseline[metric SUBSEP label] = value
+  next
+}
+{
+  read_metric()
+  key = metric SUBSEP label
+  if (metric == "" || !(key in baseline)) next
+  checked++
+  previous = baseline[key]
+  regressed = (metric == "ns/op" && value > previous * ratio) ||
+    (metric == "ops/s" && value < previous * (2 - ratio))
+  if (regressed) {
+    warnings++
+    printf "::warning title=Advisory benchmark regression::%s %s changed from %.2f to %.2f\n", label, metric, previous, value
+  }
+}
+END {
+  if (checked == 0) {
+    print "no comparable benchmark lanes found" > "/dev/stderr"
+    exit 3
+  }
+  printf "Compared %d equivalent lane(s); %d exceeded the %.0f%% advisory regression threshold.\n", checked, warnings, (ratio - 1) * 100
+}
+' "$baseline" "$candidate"

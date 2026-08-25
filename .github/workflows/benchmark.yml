@@ -95,13 +95,21 @@ jobs:
           grep -E '^(deterministic|advisory)' \
             benchmark-results/candidate.raw.txt \
             > benchmark-results/candidate.txt
+          BENCHMARK_REGRESSION_RATIO=1.20 \
+            bash candidate/scripts/compare-benchmarks \
+              benchmark-results/baseline.txt \
+              benchmark-results/candidate.txt \
+            | tee benchmark-results/regressions.txt
           {
             printf '## Advisory benchmark\n\n'
             printf 'Baseline %s; candidate %s; Rust %s.\n\n' \
               "$BASELINE_TAG" "$GITHUB_SHA" "$RUST_VERSION"
             printf 'Timing is advisory and does not gate pull requests. '
             printf 'Each revision runs its own harness; compare equivalent lanes only. '
+            printf 'Equivalent lanes emit warnings at regressions over 20%%. '
             printf 'Raw outputs and runner metadata are attached.\n\n'
+            printf '### Automated comparison\n\n'
+            sed 's/^/    /' benchmark-results/regressions.txt
             printf '### Baseline\n\n'
             sed 's/^/    /' benchmark-results/baseline.txt
             printf '\n### Candidate\n\n'

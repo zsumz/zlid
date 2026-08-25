@@ -8,6 +8,7 @@ use zlid::wire::{pack_ordered, unpack_ordered};
 use zlid::{OrderedGenerator, Profile, ZLID};
 
 const SAMPLES: usize = 21;
+const PARALLEL_SAMPLES: usize = 7;
 const MIN_SAMPLE: Duration = Duration::from_millis(25);
 const WARMUP: Duration = Duration::from_secs(2);
 const VARIANTS: usize = 16;
@@ -221,27 +222,38 @@ impl ParallelLane {
 
 fn parallel_generation(lane: ParallelLane, threads: u64) {
     const PER_THREAD: u64 = 100_000;
-    let started = Instant::now();
-    std::thread::scope(|scope| {
-        for worker in 0..threads as u8 {
-            let partition = lane.partition(worker);
-            scope.spawn(move || {
-                let mut generator = OrderedGenerator::new(Profile::Default, partition);
-                for _ in 0..PER_THREAD {
-                    let id = match lane {
-                        ParallelLane::ExplicitDistinct => generator.next().unwrap(),
-                        ParallelLane::SharedSame | ParallelLane::SharedDistinct => {
-                            ZLID::next_with_partition(partition).unwrap()
-                        }
-                    };
-                    black_box(id);
-                }
-            });
-        }
-    });
-    let per_second = (threads * PER_THREAD) as f64 / started.elapsed().as_secs_f64();
+    let mut samples = [0.0; PARALLEL_SAMPLES];
+    for sample in &mut samples {
+        let started = Instant::now();
+        std::thread::scope(|scope| {
+            for worker in 0..threads as u8 {
+                let partition = lane.partition(worker);
+                scope.spawn(move || {
+                    let mut generator = OrderedGenerator::new(Profile::Default, partition);
+                    for _ in 0..PER_THREAD {
+                        let id = match lane {
+                            ParallelLane::ExplicitDistinct => generator.next().unwrap(),
+                            ParallelLane::SharedSame | ParallelLane::SharedDistinct => {
+                                ZLID::next_with_partition(partition).unwrap()
+                            }
+                        };
+                        black_box(id);
+                    }
+                });
+            }
+        });
+        *sample = (threads * PER_THREAD) as f64 / started.elapsed().as_secs_f64();
+    }
+    samples.sort_by(f64::total_cmp);
+    let median = samples[PARALLEL_SAMPLES / 2];
+    let mut deviations = samples.map(|sample| (sample - median).abs());
+    deviations.sort_by(f64::total_cmp);
+    let mad = deviations[PARALLEL_SAMPLES / 2];
     let name = format!("{} {threads}t", lane.name());
-    println!("{:13} {name:23} {per_second:>9.0} ops/s", "advisory");
+    println!(
+        "{:13} {name:23} {median:>9.0} ops/s  MAD {mad:>7.0}",
+        "advisory"
+    );
 }
 
 fn smoke() {
@@ -267,7 +279,7 @@ fn main() {
     }
 
     println!(
-        "ZLID hot paths on {}-{}; 21-sample median/MAD timings are advisory",
+        "ZLID hot paths on {}-{}; median/MAD timings are advisory",
         std::env::consts::OS,
         std::env::consts::ARCH
     );

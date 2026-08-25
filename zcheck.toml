@@ -73,6 +73,12 @@ run = ["cargo", "bench", "--locked", "--bench", "hot-paths", "--no-run"]
 tools = ["cargo"]
 resources = ["cargo-target"]
 
+[tasks.benchmark-policy]
+description = "Verify advisory regression detection and legacy lane mapping."
+run = ["bash", "tests/benchmark_comparison.sh"]
+tools = ["bash", "awk", "grep", "mktemp", "rm"]
+inputs = ["scripts/compare-benchmarks", "tests/benchmark_comparison.sh"]
+
 [tasks.doctest]
 description = "Run all Rust documentation tests."
 run = ["cargo", "test", "--locked", "--doc", "--all-features"]
@@ -87,7 +93,7 @@ resources = ["cargo-target"]
 
 [tasks.rust-test]
 description = "Validate runtime, API, and documentation behavior."
-needs = ["test", "doctest", "example", "benchmark-compile"]
+needs = ["test", "doctest", "example", "benchmark-compile", "benchmark-policy"]
 
 [tasks.fuzz-format]
 description = "Validate formatting in the isolated fuzz workspace."

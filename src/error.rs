@@ -29,13 +29,13 @@ pub enum Error {
         /// Observed length in bytes.
         actual: usize,
     },
-    /// An operation rejected a low wire tag nibble.
+    /// An operation rejected a tag input.
     InvalidTag {
         /// Operation that rejected the tag.
         operation: &'static str,
         /// Human-readable description of accepted tags.
         expected: &'static str,
-        /// Observed low wire tag nibble.
+        /// Observed tag input.
         actual: u8,
     },
     /// A numeric input exceeded its wire-format field width.
