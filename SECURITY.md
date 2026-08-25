@@ -3,13 +3,13 @@
 ## Reporting
 
 Please report suspected vulnerabilities privately through GitHub's
-**Security > Report a vulnerability** flow for `zlid-io/rust`. Do not open a
+**Security > Report a vulnerability** flow for `zsumz/zlid`. Do not open a
 public issue for an undisclosed vulnerability.
 
 ## Supported versions
 
-The newest `0.1.0-beta.x` release receives security fixes while the crate is in
-beta. Older beta releases may be asked to upgrade.
+The newest `0.0.1-rc.x` release receives security fixes while the crate is a
+release candidate. Older release candidates may be asked to upgrade.
 
 ## Boundaries
 

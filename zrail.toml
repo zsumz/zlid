@@ -1,32 +1,52 @@
-schema = 1
 adapters = ["rust"]
-
-[repository]
-roots = ["."]
-exclude = []
-workspace_members = "exact"
-nested_git = "deny"
-submodules = "deny"
-symlinks = "inside"
+schema = 2
 
 [dependencies]
+cycles = "deny"
 mode = "locked"
 unassigned_packages = "deny"
-cycles = "deny"
 
 [[dependencies.crate_root]]
 package = "getrandom"
-root = "getrandom"
 reason = "The published getrandom package supplies platform entropy for identifier generation."
+root = "getrandom"
+
 [dependencies.crate_root.source]
 kind = "registry"
 requirement = "0.4.3"
 
+[[layer]]
+may_depend_on = []
+name = "library"
+packages = ["zlid"]
+reason = "The single library package owns the complete identifier implementation."
+
+[layer.dependencies]
+external = "locked"
+
+[repository]
+exclude = []
+nested_git = "deny"
+roots = ["."]
+submodules = "deny"
+symlinks = "inside"
+workspace_members = "exact"
+
 [source.rust]
-module_docs = "allow"
-facades = "allow"
 entrypoints = "allow"
+facades = "allow"
+module_docs = "allow"
 tests = "sibling"
+
+[source.rust.hygiene]
+deny_macros = [
+    "todo",
+    "unimplemented",
+    "dbg",
+]
+deny_methods = []
+lint_suppressions = "allow"
+unsafe = "deny"
 
 [source.rust.macros]
 mode = "deny-unreviewed"
@@ -88,8 +108,8 @@ name = "println"
 reason = "The executable quickstart prints generated identifier examples."
 
 [[source.rust.macros.allow]]
-name = "unreachable"
 inputs = "opaque"
+name = "unreachable"
 reason = "Examples and tests mark branches excluded by fixed inspection and fixture setup."
 
 [[source.rust.macros.allow]]
@@ -100,33 +120,18 @@ reason = "Tests construct bounded fixture and scripted-value collections."
 name = "write"
 reason = "Display implementations write deterministic error descriptions."
 
-[source.rust.hygiene]
-unsafe = "deny"
-lint_suppressions = "allow"
-deny_methods = []
-deny_macros = ["todo", "unimplemented", "dbg"]
+[source.rust.size.auxiliary]
+hard = 300
+target = 300
 
 [source.rust.size.facade]
-target = 300
 hard = 300
+target = 300
 
 [source.rust.size.implementation]
-target = 300
 hard = 300
+target = 300
 
 [source.rust.size.test]
-target = 300
 hard = 300
-
-[source.rust.size.auxiliary]
 target = 300
-hard = 300
-
-[[layer]]
-name = "library"
-packages = ["zlid"]
-may_depend_on = []
-reason = "The single library package owns the complete identifier implementation."
-
-[layer.dependencies]
-external = "locked"

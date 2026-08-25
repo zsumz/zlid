@@ -4,15 +4,22 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 manifest_version="$(sed -n 's/^version = "\([^"]*\)"/\1/p' "$ROOT/Cargo.toml" | head -1)"
 fixture_release="$(rg -o '"release":"[^"]+"' "$ROOT/conformance/zlid-v0.1-golden.json" | head -1 | cut -d '"' -f 4)"
+expected_fixture_release="0.1.0-beta.2"
 
-if [[ -z "$manifest_version" || "$manifest_version" != "$fixture_release" ]]; then
-  echo "Cargo version $manifest_version does not match fixture release $fixture_release" >&2
+if [[ -z "$manifest_version" ]]; then
+  echo "Cargo version is missing" >&2
+  exit 1
+fi
+
+if [[ "$fixture_release" != "$expected_fixture_release" ]]; then
+  echo "Fixture release $fixture_release does not match $expected_fixture_release" >&2
   exit 1
 fi
 
 rg -Fq "## $manifest_version" "$ROOT/CHANGELOG.md"
 rg -Fq "zlid = \"=$manifest_version\"" "$ROOT/README.md"
-rg -Fq 'repository = "https://github.com/zlid-io/rust"' "$ROOT/Cargo.toml"
+rg -Fq "zlid = { version = \"=$manifest_version\", features = [\"wasm-js\"] }" "$ROOT/README.md"
+rg -Fq 'repository = "https://github.com/zsumz/zlid"' "$ROOT/Cargo.toml"
 
 (
   cd "$ROOT/conformance"

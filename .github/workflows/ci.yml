@@ -29,10 +29,22 @@ jobs:
           components: rustfmt, clippy
           update: false
       - name: Set up zrail
-        uses: zactionsz/setup-zrail@e6f8b7b742b94d4d42ed1133df500f75eb465aa2
-        with:
-          version: "0.0.2"
-          sha256: fb535cf8a72cf15995f0c4d2ea640629624b300736c67c7961e058f4a12419d9
+        env:
+          ZRAIL_SHA256: c8913f434d046195e873d24aea36669db81b19cf8fabe422564fe770bdc0b01e
+          ZRAIL_TARGET: x86_64-unknown-linux-gnu
+          ZRAIL_VERSION: 0.0.3-rc.4
+        run: |
+          archive="zrail-${ZRAIL_VERSION}-${ZRAIL_TARGET}.tar.gz"
+          archive_path="$RUNNER_TEMP/$archive"
+          install_dir="$RUNNER_TEMP/zrail-bin"
+          release="https://github.com/zsumz/zrail/releases/download/v${ZRAIL_VERSION}"
+          curl --fail --location --silent --show-error \
+            --output "$archive_path" "$release/$archive"
+          printf '%s  %s\n' "$ZRAIL_SHA256" "$archive_path" | sha256sum --check -
+          mkdir -p "$install_dir"
+          tar -xzf "$archive_path" -C "$install_dir" zrail
+          test "$("$install_dir/zrail" --version)" = "zrail $ZRAIL_VERSION"
+          echo "$install_dir" >> "$GITHUB_PATH"
       - name: Set up zcheck
         uses: zsumz/zcheck/.github/actions/setup-zcheck@4ca5e71db9974972d4d59349550a6d25a8dc7e90
         with:

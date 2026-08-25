@@ -4,7 +4,7 @@
 
 `zlid` implements the [ZLID v0.1 specification](https://github.com/zlid-io/spec).
 Every ID is 16 bytes with a canonical 26-character text form. The v0.1 wire
-format is stable; the Rust API is beta and may change before 1.0.
+format is stable; the Rust API is prerelease and may change before 1.0.
 
 Rust 1.88 or newer is required.
 
@@ -12,7 +12,7 @@ Rust 1.88 or newer is required.
 
 ```toml
 [dependencies]
-zlid = "=0.1.0-beta.2"
+zlid = "=0.0.1-rc.1"
 ```
 
 ## Start
@@ -62,7 +62,7 @@ For `wasm32-unknown-unknown`, enable `wasm-js`:
 
 ```toml
 [dependencies]
-zlid = { version = "=0.1.0-beta.2", features = ["wasm-js"] }
+zlid = { version = "=0.0.1-rc.1", features = ["wasm-js"] }
 ```
 
 ## Qualification
@@ -75,8 +75,8 @@ scripts/check-release
 `zcheck` is the canonical development gate. `scripts/check-release` requires a
 clean worktree and verifies the packaged crate and an isolated consumer. The
 published crate includes the pinned
-[ZLID v0.1 conformance snapshot](https://github.com/zlid-io/rust/blob/main/conformance/README.md).
+[ZLID v0.1 conformance snapshot](https://github.com/zsumz/zlid/blob/main/conformance/README.md).
 
 ## License
 
-Apache-2.0. See [LICENSE](https://github.com/zlid-io/rust/blob/main/LICENSE).
+Apache-2.0. See [LICENSE](https://github.com/zsumz/zlid/blob/main/LICENSE).

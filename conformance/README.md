@@ -5,8 +5,11 @@ fixture is part of the published crate so its tests remain self-contained after
 download from crates.io.
 
 - Specification: <https://github.com/zlid-io/spec>
-- Fixture release: `0.1.0-beta.2`
+- Source fixture release: `0.1.0-beta.2`
 - Extraction source: ZLID monorepo commit `4f90f76a183d2c9d508badfd99ec465758f777da`
+
+The fixture release identifies that frozen upstream dataset and is independent
+of this Rust crate's package version.
 
 The handwritten validators under `tests/conformance/schema*.rs` deliberately
 lock this exact snapshot. They mirror

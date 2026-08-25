@@ -37,6 +37,8 @@ use generated_cases::{assert_generated_section, assert_generator_section};
 use json::{array, get, object, string, JsonParser};
 use schema::{assert_coverage_schema, assert_fixture_schema};
 
+const FIXTURE_RELEASE: &str = "0.1.0-beta.2";
+
 #[test]
 fn shared_conformance_fixture() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
@@ -51,7 +53,7 @@ fn shared_conformance_fixture() {
         .expect("parse coverage manifest")
         .into_object();
 
-    assert_eq!(env!("CARGO_PKG_VERSION"), string(get(&golden, "release")));
+    assert_eq!(FIXTURE_RELEASE, string(get(&golden, "release")));
     assert_fixture_schema(&golden);
     assert_coverage_schema(&coverage);
     assert_conformance_baseline(&coverage, &golden);

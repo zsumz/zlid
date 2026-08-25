@@ -1,12 +1,11 @@
 [package]
 name = "zlid"
-version = "0.1.0-beta.2"
+version = "0.0.1-rc.1"
 edition = "2021"
 rust-version = "1.88"
 description = "Canonical, sortable, collision-resistant identifiers for Rust"
 license = "Apache-2.0"
-repository = "https://github.com/zlid-io/rust"
-homepage = "https://zlid.io"
+repository = "https://github.com/zsumz/zlid"
 documentation = "https://docs.rs/zlid"
 readme = "README.md"
 keywords = ["zlid", "identifier", "sortable", "alias"]

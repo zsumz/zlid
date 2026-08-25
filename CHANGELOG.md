@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented here.
 
-## 0.1.0-beta.2 - 2026-08-25
+## 0.0.1-rc.1 - 2026-08-25
 
 - Added the complete Rust SDK for the ZLID v0.1 ordered, random, alias,
   partition, comparison, sentinel, opaque, and inspection surfaces.

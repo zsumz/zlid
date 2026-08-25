@@ -4,7 +4,7 @@ Thank you for improving the Rust implementation of ZLID.
 
 ## Development
 
-Use Rust 1.88 or newer with zrail 0.0.2 and zcheck 0.0.2 on `PATH`. Run the
+Use Rust 1.88 or newer with zrail 0.0.3-rc.4 and zcheck 0.0.2 on `PATH`. Run the
 canonical gate before opening a pull request:
 
 ```sh
