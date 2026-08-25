@@ -1,6 +1,6 @@
 [package]
 name = "zlid"
-version = "0.0.1-rc.2"
+version = "0.0.1-rc.3"
 edition = "2021"
 rust-version = "1.88"
 description = "Canonical, sortable, collision-resistant identifiers for Rust"
@@ -11,6 +11,7 @@ readme = "README.md"
 keywords = ["zlid", "identifier", "sortable", "alias"]
 categories = ["data-structures", "encoding"]
 include = [
+  "benches/**/*.rs",
   "src/**/*.rs",
   "tests/**/*.rs",
   "examples/**/*.rs",
@@ -28,8 +29,15 @@ include = [
 name = "zlid"
 path = "src/lib.rs"
 
+[[bench]]
+name = "hot-paths"
+path = "benches/hot_paths.rs"
+harness = false
+
 [dependencies]
 getrandom = "0.4.3"
+hmac = "0.13.0"
+sha2 = { version = "0.11.0", default-features = false }
 
 [features]
 default = []
@@ -40,6 +48,9 @@ js-sys = { version = "0.3.104", optional = true }
 
 [target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dev-dependencies]
 wasm-bindgen-test = "=0.3.77"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
+allocation-counter = "=0.8.1"
 
 [lints.rust]
 missing_docs = "warn"

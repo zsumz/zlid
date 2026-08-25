@@ -7,6 +7,15 @@ mode = "locked"
 unassigned_packages = "deny"
 
 [[dependencies.crate_root]]
+package = "allocation-counter"
+reason = "Test-only allocation contracts enforce zero-allocation hot paths."
+root = "allocation_counter"
+
+[dependencies.crate_root.source]
+kind = "registry"
+requirement = "=0.8.1"
+
+[[dependencies.crate_root]]
 package = "getrandom"
 reason = "The published getrandom package supplies platform entropy for identifier generation."
 root = "getrandom"
@@ -16,6 +25,15 @@ kind = "registry"
 requirement = "0.4.3"
 
 [[dependencies.crate_root]]
+package = "hmac"
+reason = "The reviewed RustCrypto HMAC implementation provides allocation-free ZLID-A rounds."
+root = "hmac"
+
+[dependencies.crate_root.source]
+kind = "registry"
+requirement = "0.13.0"
+
+[[dependencies.crate_root]]
 package = "js-sys"
 reason = "The optional WebAssembly adapter supplies the JavaScript wall clock."
 root = "js_sys"
@@ -23,6 +41,15 @@ root = "js_sys"
 [dependencies.crate_root.source]
 kind = "registry"
 requirement = "0.3.104"
+
+[[dependencies.crate_root]]
+package = "sha2"
+reason = "The reviewed RustCrypto SHA-256 implementation backs ZLID-A HMAC."
+root = "sha2"
+
+[dependencies.crate_root.source]
+kind = "registry"
+requirement = "0.11.0"
 
 [[dependencies.crate_root]]
 package = "wasm-bindgen-test"
@@ -128,7 +155,7 @@ reason = "The executable quickstart prints generated identifier examples."
 [[source.rust.macros.allow]]
 inputs = "opaque"
 name = "unreachable"
-reason = "Examples and tests mark branches excluded by fixed inspection and fixture setup."
+reason = "RustCrypto accepts HMAC keys of every length; examples and tests also mark fixture-excluded branches."
 
 [[source.rust.macros.allow]]
 name = "vec"

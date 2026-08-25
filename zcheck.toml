@@ -67,6 +67,12 @@ run = ["cargo", "test", "--locked", "--all-targets", "--all-features"]
 tools = ["cargo"]
 resources = ["cargo-target"]
 
+[tasks.benchmark-compile]
+description = "Compile the opt-in hot-path benchmark without timing it."
+run = ["cargo", "bench", "--locked", "--bench", "hot-paths", "--no-run"]
+tools = ["cargo"]
+resources = ["cargo-target"]
+
 [tasks.doctest]
 description = "Run all Rust documentation tests."
 run = ["cargo", "test", "--locked", "--doc", "--all-features"]
@@ -81,7 +87,7 @@ resources = ["cargo-target"]
 
 [tasks.rust-test]
 description = "Validate runtime, API, and documentation behavior."
-needs = ["test", "doctest", "example"]
+needs = ["test", "doctest", "example", "benchmark-compile"]
 
 [tasks.package]
 description = "Build and inspect the publishable crate archive."

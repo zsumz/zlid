@@ -1,8 +1,8 @@
-use super::hmac_sha256;
+use super::HmacSha256;
 use crate::bytes_to_hex;
 
 fn assert_vector(key: &[u8], parts: &[&[u8]], expected: &str) {
-    assert_eq!(bytes_to_hex(&hmac_sha256(key, parts)), expected);
+    assert_eq!(bytes_to_hex(&HmacSha256::new(key).digest(parts)), expected);
 }
 
 // RFC 4231, sections 4.2 through 4.8.
@@ -55,7 +55,7 @@ fn rfc_4231_case_4() {
 #[test]
 fn rfc_4231_case_5_truncated_to_128_bits() {
     let key = [0x0c; 20];
-    let digest = hmac_sha256(&key, &[b"Test With ", b"Truncation"]);
+    let digest = HmacSha256::new(&key).digest(&[b"Test With ", b"Truncation"]);
     assert_eq!(
         bytes_to_hex(&digest[..16]),
         "A3B6167473100EE06E0C796C2955552B"
@@ -88,4 +88,12 @@ fn rfc_4231_case_7_hashes_a_long_key_and_multipart_message() {
         ],
         "9B09FFA71B942FCB27635FBCD5B0E944BFDC63644F0713938A7F51535C3A35E2",
     );
+}
+
+#[test]
+fn prepared_key_state_is_reusable() {
+    let hmac = HmacSha256::new(b"reused high-entropy key material");
+    let parts: &[&[u8]] = &[b"domain", b"|", b"message"];
+    assert_eq!(hmac.digest(parts), hmac.digest(parts));
+    assert_ne!(hmac.digest(parts), hmac.digest(&[b"domain|other"]));
 }

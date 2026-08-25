@@ -45,10 +45,11 @@ pub(crate) fn random_zlid<E: EntropySource>(source: &mut E) -> Result<[u8; BYTE_
 
 pub(crate) fn random_value<E: EntropySource>(source: &mut E, bit_count: u8) -> Result<u64> {
     let byte_count = usize::from(bit_count.div_ceil(8));
-    let mut bytes = vec![0u8; byte_count];
-    source.fill_bytes(&mut bytes)?;
+    let mut buffer = [0u8; std::mem::size_of::<u64>()];
+    let bytes = &mut buffer[..byte_count];
+    source.fill_bytes(bytes)?;
     let mut value = 0u64;
-    for byte in bytes {
+    for &byte in bytes.iter() {
         value = (value << 8) | u64::from(byte);
     }
     let extra_bits = byte_count as u8 * 8 - bit_count;
@@ -63,3 +64,7 @@ fn fill_system_random(out: &mut [u8]) -> Result<()> {
     getrandom::fill(out)
         .map_err(|error| Error::Random(format!("system entropy unavailable: {error}")))
 }
+
+#[cfg(test)]
+#[path = "random_tests.rs"]
+mod tests;

@@ -2,6 +2,17 @@
 
 All notable changes to this project are documented here.
 
+## 0.0.1-rc.3 - 2026-08-25
+
+- Replaced allocation-heavy alias hashing with streaming RustCrypto
+  HMAC-SHA256 while preserving published outputs and ZLID v0.1 vectors.
+- Removed steady-state heap allocation from valid parsing, ordered random
+  tails, aliasing, and formatting through `Display` and `Debug`.
+- Reduced shared-generator contention by drawing system entropy before locking
+  stream state while keeping clock, sequence, packing, and commit atomic.
+- Added byte-exact legacy crypto oracles, allocation budgets, and a packaged
+  hot-path benchmark.
+
 ## 0.0.1-rc.2 - 2026-08-25
 
 - Made `ZLID` the primary Rust type while retaining `Zlid` as a compatibility

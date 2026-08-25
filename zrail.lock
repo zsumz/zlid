@@ -2,19 +2,19 @@
 schema = 2
 semantics = 3
 producer = "0.0.3-rc.4"
-contract_sha256 = "7ca4d7b45de6e0357648eec15560c45c94cc19a67d86661edfc03d19c27e9d76"
+contract_sha256 = "011d401e0aaa39b49445309b91f78309d615845c327da92e34f2096e75787f90"
 ratchet = []
 
 [analysis]
-inventory_sha256 = "774184bc8b82d4276adf169e815e05dbbd1305e422ccfa0384b4618147be6e88"
+inventory_sha256 = "6591befcc4b32540773acf4b43d6ff620c38e8a5365bc9f82fdaa376fa6fe049"
 exclusions_sha256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-cargo_lock_sha256 = "fcab29a16b1185d147975320583dd75a7858c1711864338a5a694175679bc4e1"
+cargo_lock_sha256 = "a5f2838c45ca2ee0553591683efcd2fbcbf5ef180e5b4ec30aee9a8c689d6b21"
 packages = 1
-targets = 10
-physical_rust_files = 41
-base_source_contexts = 59
+targets = 15
+physical_rust_files = 52
+base_source_contexts = 71
 derived_source_contexts = 0
-source_facts = 12605
+source_facts = 16603
 projection_queries = 0
 projected_facts = 0
 unresolved_bindings = 0
@@ -22,10 +22,24 @@ analyzer_semantics = 3
 
 [[analysis.contract_source]]
 path = "zrail.toml"
-sha256 = "8021a5618742da3bac5b6d6e81dd563d5016bc0a9d0e628ba85fc863cdb92058"
+sha256 = "aecf23761b3f3fb834e039fadbb843aeb96d5ec2ed2a722ceb64c5830bb9ccc8"
 
 [[package]]
 name = "zlid"
+
+[[package.dependency]]
+alias = "allocation-counter"
+name = "allocation-counter"
+crate_root = "allocation_counter"
+kind = "development"
+scope = "external"
+target = 'cfg(not(target_arch = "wasm32"))'
+optional = false
+default_features = true
+
+[package.dependency.source]
+kind = "registry"
+requirement = "=0.8.1"
 
 [[package.dependency]]
 alias = "getrandom"
@@ -41,6 +55,19 @@ kind = "registry"
 requirement = "0.4.3"
 
 [[package.dependency]]
+alias = "hmac"
+name = "hmac"
+crate_root = "hmac"
+kind = "normal"
+scope = "external"
+optional = false
+default_features = true
+
+[package.dependency.source]
+kind = "registry"
+requirement = "0.13.0"
+
+[[package.dependency]]
 alias = "js-sys"
 name = "js-sys"
 crate_root = "js_sys"
@@ -53,6 +80,19 @@ default_features = true
 [package.dependency.source]
 kind = "registry"
 requirement = "0.3.104"
+
+[[package.dependency]]
+alias = "sha2"
+name = "sha2"
+crate_root = "sha2"
+kind = "normal"
+scope = "external"
+optional = false
+default_features = false
+
+[package.dependency.source]
+kind = "registry"
+requirement = "0.11.0"
 
 [[package.dependency]]
 alias = "wasm-bindgen-test"

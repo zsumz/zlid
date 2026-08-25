@@ -68,19 +68,9 @@ where
 
     fn next_event_and_pack(&mut self, partition: Option<u8>) -> Result<ZLID> {
         let prepared = self.core.prepare_next(partition)?;
-        let event = prepared.event;
         let spec = self.core.profile().spec();
         let random_tail = random_value(&mut self.entropy, spec.rand_bits)?;
-        let bytes = pack_ordered(
-            self.core.profile(),
-            event.timestamp_ms,
-            event.partition,
-            event.sequence,
-            random_tail,
-            event.tag,
-        )?;
-        self.core.commit(prepared);
-        Ok(ZLID(bytes))
+        self.core.pack_prepared(prepared, random_tail)
     }
 }
 
@@ -126,6 +116,15 @@ where
     pub fn next(&mut self, partition: Option<u8>) -> Result<OrderedEvent> {
         let prepared = self.prepare_next(partition)?;
         Ok(self.commit(prepared))
+    }
+
+    pub(crate) fn next_with_random_tail(
+        &mut self,
+        partition: Option<u8>,
+        random_tail: u64,
+    ) -> Result<ZLID> {
+        let prepared = self.prepare_next(partition)?;
+        self.pack_prepared(prepared, random_tail)
     }
 
     fn prepare_next(&mut self, partition: Option<u8>) -> Result<PreparedEvent> {
@@ -186,6 +185,20 @@ where
             },
         );
         event
+    }
+
+    fn pack_prepared(&mut self, prepared: PreparedEvent, random_tail: u64) -> Result<ZLID> {
+        let event = prepared.event;
+        let bytes = pack_ordered(
+            self.profile,
+            event.timestamp_ms,
+            event.partition,
+            event.sequence,
+            random_tail,
+            event.tag,
+        )?;
+        self.commit(prepared);
+        Ok(ZLID(bytes))
     }
 }
 

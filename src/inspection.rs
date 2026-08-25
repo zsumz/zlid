@@ -217,22 +217,24 @@ pub(crate) fn inspect_bytes(bytes: [u8; BYTE_LENGTH]) -> Inspection {
     }
 
     if tag == TAG_ZLID_RANDOM {
+        let random_hex = bytes_hex[..31].to_string();
         return Inspection::Random {
             text,
-            bytes_hex: bytes_hex.clone(),
+            bytes_hex,
             tag,
-            random_hex: bytes_hex[..31].to_string(),
+            random_hex,
         };
     }
 
     if let Some((source_profile, source_clock_state)) = alias_source_from_tag(tag) {
+        let alias_data_hex = bytes_hex[..31].to_string();
         return Inspection::Alias {
             text,
-            bytes_hex: bytes_hex.clone(),
+            bytes_hex,
             tag,
             source_profile,
             source_clock_state,
-            alias_data_hex: bytes_hex[..31].to_string(),
+            alias_data_hex,
         };
     }
 
@@ -255,3 +257,7 @@ pub(crate) fn inspect_bytes(bytes: [u8; BYTE_LENGTH]) -> Inspection {
         },
     }
 }
+
+#[cfg(test)]
+#[path = "inspection_tests.rs"]
+mod tests;

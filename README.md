@@ -12,7 +12,7 @@ Rust 1.88 or newer is required.
 
 ```toml
 [dependencies]
-zlid = "=0.0.1-rc.2"
+zlid = "=0.0.1-rc.3"
 ```
 
 ## Start
@@ -52,6 +52,8 @@ cargo run --example quickstart
 The shared `ZLID::next()` generator is synchronized within one process.
 Explicit generators are independent; separate writers and processes do not
 gain a global deterministic uniqueness guarantee.
+Use explicit generators to avoid shared-lock contention only when their
+writer, profile, and partition streams are intentionally independent.
 
 ZLID-A is deterministic obfuscation. It is not encryption, authentication, or
 a bearer token. Use a high-entropy secret key; decoding with the wrong key is
@@ -66,7 +68,7 @@ For `wasm32-unknown-unknown`, enable `wasm-js`:
 
 ```toml
 [dependencies]
-zlid = { version = "=0.0.1-rc.2", features = ["wasm-js"] }
+zlid = { version = "=0.0.1-rc.3", features = ["wasm-js"] }
 ```
 
 ## Qualification

@@ -13,6 +13,7 @@ fi
 listing="$(cargo package "${package_args[@]}" --list)"
 
 required=(
+  "benches/hot_paths.rs"
   "Cargo.lock"
   "Cargo.toml"
   "CHANGELOG.md"
@@ -25,10 +26,16 @@ required=(
   "examples/quickstart.rs"
   "src/lib.rs"
   "tests/alias_boundaries.rs"
+  "tests/alias_differential.rs"
   "tests/api.rs"
   "tests/conformance.rs"
   "tests/ordered_boundaries.rs"
+  "tests/ordered_failure_atomicity.rs"
   "tests/ordered_properties.rs"
+  "tests/performance_allocations.rs"
+  "tests/shared_generation.rs"
+  "tests/support/legacy_alias.rs"
+  "tests/support/legacy_sha256.rs"
   "tests/value_properties.rs"
   "tests/wasm_runtime.rs"
 )

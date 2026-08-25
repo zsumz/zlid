@@ -2,7 +2,7 @@
 
 use std::cmp::Ordering;
 use std::fmt;
-use std::sync::{Mutex, OnceLock};
+use std::sync::OnceLock;
 
 mod alias;
 mod bytes;
@@ -16,9 +16,11 @@ mod ordered_types;
 mod partition;
 mod profile;
 mod random;
+mod shared;
 mod text;
 
 use constants::BYTE_LENGTH;
+use shared::SharedOrderedGenerator;
 
 pub use bytes::{bytes_from_hex, bytes_to_hex};
 pub use clock::{Clock, SystemClock};
@@ -77,12 +79,9 @@ impl ZLID {
 
     /// Emits the next ordered ZLID from the shared default generator with a partition.
     pub fn next_with_partition(partition: u8) -> Result<Self> {
-        let generator = DEFAULT_GENERATOR
-            .get_or_init(|| Mutex::new(OrderedGenerator::new(Profile::Default, 0)));
-        let mut guard = generator
-            .lock()
-            .map_err(|_| Error::Clock("default generator lock is poisoned".to_string()))?;
-        guard.next_with_partition(partition)
+        DEFAULT_GENERATOR
+            .get_or_init(SharedOrderedGenerator::new)
+            .next_with_partition(partition)
     }
 
     /// Creates a default-profile explicit ordered generator with partition `0`.
@@ -187,13 +186,17 @@ impl ZLID {
 
 impl fmt::Debug for ZLID {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_tuple("ZLID").field(&self.text()).finish()
+        let encoded = text::encode_text_array(&self.0);
+        f.debug_tuple("ZLID")
+            .field(&text::encoded_text_str(&encoded))
+            .finish()
     }
 }
 
 impl fmt::Display for ZLID {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(&self.text())
+        let encoded = text::encode_text_array(&self.0);
+        f.write_str(text::encoded_text_str(&encoded))
     }
 }
 
@@ -217,4 +220,4 @@ impl PartialOrd for ZLID {
     }
 }
 
-static DEFAULT_GENERATOR: OnceLock<Mutex<OrderedGenerator>> = OnceLock::new();
+static DEFAULT_GENERATOR: OnceLock<SharedOrderedGenerator> = OnceLock::new();

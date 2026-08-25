@@ -14,6 +14,18 @@ zcheck
 Production Rust files have a 300-line ceiling, tests live in separate files,
 and `unsafe`, `todo!`, and `unimplemented!` are rejected mechanically.
 
+## Performance
+
+`zcheck` enforces exact allocation budgets and compiles the benchmark. Run the
+timing lanes manually when changing a hot path:
+
+```sh
+cargo bench --locked --bench hot-paths -- --measure
+```
+
+Elapsed timings are advisory. Compare results on the same host and toolchain;
+the publication gate does not use timing thresholds.
+
 ## Conformance changes
 
 The fixture under `conformance/` represents the public ZLID specification. Do
