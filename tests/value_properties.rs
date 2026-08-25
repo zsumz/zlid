@@ -102,7 +102,7 @@ fn deterministic_values() -> Vec<ZLID> {
     let mut values = Vec::with_capacity(2_064);
     for _ in 0..2_048 {
         let mut bytes = [0; 16];
-        for chunk in bytes.chunks_exact_mut(8) {
+        for chunk in bytes.as_chunks_mut::<8>().0 {
             state = next_value(state);
             chunk.copy_from_slice(&state.to_be_bytes());
         }
