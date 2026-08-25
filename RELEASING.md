@@ -5,8 +5,8 @@ matching signed tag.
 
 ## Candidate
 
-1. Confirm `Cargo.toml`, the conformance fixture release, README examples, and
-   `CHANGELOG.md` agree on the version.
+1. Confirm `Cargo.toml`, README examples, and `CHANGELOG.md` agree on the package
+   version. Confirm the pinned conformance fixture source release and checksum.
 2. Run `scripts/check-release` from a clean checkout.
 3. Run `cargo audit --deny warnings` with a freshly updated RustSec database.
 4. Run `cargo publish --locked --dry-run` with registry access.
