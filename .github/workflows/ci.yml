@@ -28,7 +28,18 @@ jobs:
           profile: minimal
           components: rustfmt, clippy
           update: false
-      - run: scripts/check-release
+      - name: Set up zrail
+        uses: zactionsz/setup-zrail@e6f8b7b742b94d4d42ed1133df500f75eb465aa2
+        with:
+          version: "0.0.2"
+          sha256: fb535cf8a72cf15995f0c4d2ea640629624b300736c67c7961e058f4a12419d9
+      - name: Set up zcheck
+        uses: zsumz/zcheck/.github/actions/setup-zcheck@4ca5e71db9974972d4d59349550a6d25a8dc7e90
+        with:
+          version: "0.0.2"
+          sha256: a9e3ca964b6f5e86c693edeff4aeaddb46ee9d62f8713d3ded0bb6533b758e53
+      - name: Run zcheck-backed release gate
+        run: scripts/check-release
 
   msrv:
     name: MSRV / 1.88.0

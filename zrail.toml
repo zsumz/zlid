@@ -1,0 +1,132 @@
+schema = 1
+adapters = ["rust"]
+
+[repository]
+roots = ["."]
+exclude = []
+workspace_members = "exact"
+nested_git = "deny"
+submodules = "deny"
+symlinks = "inside"
+
+[dependencies]
+mode = "locked"
+unassigned_packages = "deny"
+cycles = "deny"
+
+[[dependencies.crate_root]]
+package = "getrandom"
+root = "getrandom"
+reason = "The published getrandom package supplies platform entropy for identifier generation."
+[dependencies.crate_root.source]
+kind = "registry"
+requirement = "0.4.3"
+
+[source.rust]
+module_docs = "allow"
+facades = "allow"
+entrypoints = "allow"
+tests = "sibling"
+
+[source.rust.macros]
+mode = "deny-unreviewed"
+
+[[source.rust.macros.allow]]
+name = "Clone"
+reason = "Owned identifier state and test doubles use Rust's built-in Clone derive."
+
+[[source.rust.macros.allow]]
+name = "Copy"
+reason = "Fixed-width identifiers and value enums use Rust's built-in Copy derive."
+
+[[source.rust.macros.allow]]
+name = "Debug"
+reason = "Public values and test failures expose deterministic diagnostic formatting."
+
+[[source.rust.macros.allow]]
+name = "Default"
+reason = "Stateless clock and entropy capability adapters use Rust's built-in Default derive."
+
+[[source.rust.macros.allow]]
+name = "Eq"
+reason = "Identifiers and protocol values support exact equality."
+
+[[source.rust.macros.allow]]
+name = "Hash"
+reason = "Partitions and identifiers support keyed collection use."
+
+[[source.rust.macros.allow]]
+name = "PartialEq"
+reason = "Public values and tests use exact comparison."
+
+[[source.rust.macros.allow]]
+name = "assert"
+reason = "Examples and conformance tests assert deterministic predicates."
+
+[[source.rust.macros.allow]]
+name = "assert_eq"
+reason = "Examples and conformance tests compare deterministic values."
+
+[[source.rust.macros.allow]]
+name = "assert_ne"
+reason = "Examples verify independently generated identifiers differ."
+
+[[source.rust.macros.allow]]
+name = "format"
+reason = "Errors and test diagnostics construct bounded owned messages."
+
+[[source.rust.macros.allow]]
+name = "matches"
+reason = "Implementation and tests use Rust's standard pattern predicate."
+
+[[source.rust.macros.allow]]
+name = "panic"
+reason = "Test-only parsers and scripted capabilities fail loudly on impossible fixtures."
+
+[[source.rust.macros.allow]]
+name = "println"
+reason = "The executable quickstart prints generated identifier examples."
+
+[[source.rust.macros.allow]]
+name = "unreachable"
+inputs = "opaque"
+reason = "Examples and tests mark branches excluded by fixed inspection and fixture setup."
+
+[[source.rust.macros.allow]]
+name = "vec"
+reason = "Tests construct bounded fixture and scripted-value collections."
+
+[[source.rust.macros.allow]]
+name = "write"
+reason = "Display implementations write deterministic error descriptions."
+
+[source.rust.hygiene]
+unsafe = "deny"
+lint_suppressions = "allow"
+deny_methods = []
+deny_macros = ["todo", "unimplemented", "dbg"]
+
+[source.rust.size.facade]
+target = 300
+hard = 300
+
+[source.rust.size.implementation]
+target = 300
+hard = 300
+
+[source.rust.size.test]
+target = 300
+hard = 300
+
+[source.rust.size.auxiliary]
+target = 300
+hard = 300
+
+[[layer]]
+name = "library"
+packages = ["zlid"]
+may_depend_on = []
+reason = "The single library package owns the complete identifier implementation."
+
+[layer.dependencies]
+external = "locked"

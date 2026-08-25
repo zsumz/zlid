@@ -5,5 +5,5 @@
 - Use a bodyless Conventional Commit subject and never add a coauthor.
 - Keep production Rust files at or below 300 lines.
 - Keep tests in separate files.
-- Treat `scripts/check` as the canonical development gate and
-  `scripts/check-release` as the publication gate.
+- Treat `zcheck` as the canonical development gate and `scripts/check-release`
+  as the publication gate.

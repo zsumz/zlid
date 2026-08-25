@@ -68,13 +68,13 @@ zlid = { version = "=0.1.0-beta.2", features = ["wasm-js"] }
 ## Qualification
 
 ```sh
-scripts/check
+zcheck
 scripts/check-release
 ```
 
-`scripts/check` is the canonical development gate. `scripts/check-release`
-requires a clean worktree and verifies the packaged crate and an isolated
-consumer. The published crate includes the pinned
+`zcheck` is the canonical development gate. `scripts/check-release` requires a
+clean worktree and verifies the packaged crate and an isolated consumer. The
+published crate includes the pinned
 [ZLID v0.1 conformance snapshot](https://github.com/zlid-io/rust/blob/main/conformance/README.md).
 
 ## License

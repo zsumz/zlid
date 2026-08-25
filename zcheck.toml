@@ -1,0 +1,89 @@
+schema = 1
+default = "check"
+
+[execution]
+jobs = 4
+default_timeout = "20m"
+repository_state = "preserve"
+
+[tasks.source-shape]
+description = "Enforce repository source shape and legacy structural invariants."
+run = ["scripts/check-architecture"]
+tools = ["bash", "find", "rg", "tr", "wc"]
+inputs = ["scripts/check-architecture"]
+
+[tasks.zrail]
+description = "Enforce the reviewed architecture policy."
+run = ["zrail", "check"]
+tools = ["zrail"]
+inputs = ["zrail.toml", "zrail.lock"]
+
+[tasks.git-diff]
+description = "Reject whitespace errors in unstaged changes."
+run = ["git", "diff", "--check"]
+tools = ["git"]
+
+[tasks.git-diff-cached]
+description = "Reject whitespace errors in staged changes."
+run = ["git", "diff", "--cached", "--check"]
+tools = ["git"]
+
+[tasks.architecture]
+description = "Validate source shape, architecture policy, and diff hygiene."
+needs = ["source-shape", "zrail", "git-diff", "git-diff-cached"]
+
+[tasks.metadata]
+description = "Verify release metadata and the pinned conformance snapshot."
+run = ["scripts/check-metadata"]
+tools = ["bash", "cut", "head", "rg", "sed", "shasum"]
+inputs = ["scripts/check-metadata", "Cargo.toml", "README.md", "CHANGELOG.md", "conformance/zlid-v0.1-golden.json", "conformance/zlid-v0.1-golden.sha256"]
+
+[tasks.format]
+description = "Validate Rust formatting."
+run = ["cargo", "fmt", "--all", "--", "--check"]
+tools = ["cargo"]
+resources = ["cargo-target"]
+
+[tasks.clippy]
+description = "Run Clippy across every target with warnings denied."
+run = ["cargo", "clippy", "--locked", "--all-targets", "--all-features", "--", "-D", "warnings"]
+tools = ["cargo"]
+resources = ["cargo-target"]
+
+[tasks.docs]
+description = "Build library documentation with warnings denied."
+run = ["cargo", "doc", "--locked", "--no-deps", "--all-features"]
+env = { RUSTDOCFLAGS = "-D warnings" }
+tools = ["cargo"]
+resources = ["cargo-target"]
+
+[tasks.rust-lint]
+description = "Validate formatting, lints, and documentation."
+needs = ["format", "clippy", "docs"]
+
+[tasks.test]
+description = "Run the complete Rust test suite."
+run = ["cargo", "test", "--locked", "--all-targets", "--all-features"]
+tools = ["cargo"]
+resources = ["cargo-target"]
+
+[tasks.doctest]
+description = "Run all Rust documentation tests."
+run = ["cargo", "test", "--locked", "--doc", "--all-features"]
+tools = ["cargo"]
+resources = ["cargo-target"]
+
+[tasks.rust-test]
+description = "Validate runtime, API, and documentation behavior."
+needs = ["test", "doctest"]
+
+[tasks.package]
+description = "Build and inspect the publishable crate archive."
+run = ["scripts/check-package", "--allow-dirty"]
+tools = ["bash", "cargo", "grep", "tr", "wc"]
+resources = ["cargo-target"]
+inputs = ["scripts/check-package", "Cargo.toml", "Cargo.lock", "README.md", "CHANGELOG.md", "LICENSE", "conformance/coverage.json", "conformance/zlid-v0.1-golden.json", "conformance/zlid-v0.1-golden.sha256"]
+
+[tasks.check]
+description = "Run complete local ZLID qualification."
+needs = ["architecture", "metadata", "rust-lint", "rust-test", "package"]
