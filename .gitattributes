@@ -1,0 +1,3 @@
+# Preserve the exact bytes of the hash-bound conformance snapshot.
+conformance/zlid-v0.1-golden.json text eol=lf
+conformance/zlid-v0.1-golden.sha256 text eol=lf
