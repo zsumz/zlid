@@ -67,7 +67,8 @@ where
     }
 
     fn next_event_and_pack(&mut self, partition: Option<u8>) -> Result<Zlid> {
-        let event = self.core.next(partition)?;
+        let prepared = self.core.prepare_next(partition)?;
+        let event = prepared.event;
         let spec = self.core.profile().spec();
         let random_tail = random_value(&mut self.entropy, spec.rand_bits)?;
         let bytes = pack_ordered(
@@ -78,6 +79,7 @@ where
             random_tail,
             event.tag,
         )?;
+        self.core.commit(prepared);
         Ok(Zlid(bytes))
     }
 }
@@ -95,6 +97,10 @@ pub struct OrderedGeneratorCore<C = SystemClock> {
 struct StreamState {
     last_ms: u64,
     sequence: u32,
+}
+
+struct PreparedEvent {
+    event: OrderedEvent,
 }
 
 impl<C> OrderedGeneratorCore<C>
@@ -118,6 +124,11 @@ where
 
     /// Emits the next deterministic event for an optional partition override.
     pub fn next(&mut self, partition: Option<u8>) -> Result<OrderedEvent> {
+        let prepared = self.prepare_next(partition)?;
+        Ok(self.commit(prepared))
+    }
+
+    fn prepare_next(&mut self, partition: Option<u8>) -> Result<PreparedEvent> {
         let partition = partition.unwrap_or(self.default_partition);
         let now_ms = self.clock.now_ms()?;
         if now_ms > MAX_TS {
@@ -155,20 +166,26 @@ where
             ));
         }
 
-        self.state_by_partition.insert(
-            partition,
-            StreamState {
-                last_ms: timestamp_ms,
+        Ok(PreparedEvent {
+            event: OrderedEvent {
+                timestamp_ms,
+                partition,
                 sequence,
+                tag,
+            },
+        })
+    }
+
+    fn commit(&mut self, prepared: PreparedEvent) -> OrderedEvent {
+        let event = prepared.event;
+        self.state_by_partition.insert(
+            event.partition,
+            StreamState {
+                last_ms: event.timestamp_ms,
+                sequence: event.sequence,
             },
         );
-
-        Ok(OrderedEvent {
-            timestamp_ms,
-            partition,
-            sequence,
-            tag,
-        })
+        event
     }
 }
 
