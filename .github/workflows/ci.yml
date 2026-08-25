@@ -30,6 +30,7 @@ jobs:
           update: false
       - name: Set up ripgrep
         env:
+          RIPGREP_REVISION: e89fff89ac
           RIPGREP_SHA256: 33e15bcf1624b25cdd2a55813a47a2f95dbe126268203e76aa6a585d1e7b149c
           RIPGREP_TARGET: x86_64-unknown-linux-musl
           RIPGREP_VERSION: 15.2.0
@@ -45,8 +46,9 @@ jobs:
           mkdir -p "$install_dir"
           tar -xzf "$archive_path" --strip-components=1 \
             -C "$install_dir" "$archive_root/rg"
-          test "$("$install_dir/rg" --version | head -n 1)" = \
-            "ripgrep $RIPGREP_VERSION"
+          version_line="$("$install_dir/rg" --version | head -n 1)"
+          test "$version_line" = \
+            "ripgrep $RIPGREP_VERSION (rev $RIPGREP_REVISION)"
           echo "$install_dir" >> "$GITHUB_PATH"
       - name: Set up zrail
         env:
