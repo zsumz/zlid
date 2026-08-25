@@ -11,7 +11,7 @@ if [[ -z "$manifest_version" || "$manifest_version" != "$fixture_release" ]]; th
 fi
 
 rg -Fq "## $manifest_version" "$ROOT/CHANGELOG.md"
-rg -Fq "zlid = \"$manifest_version\"" "$ROOT/README.md"
+rg -Fq "zlid = \"=$manifest_version\"" "$ROOT/README.md"
 rg -Fq 'repository = "https://github.com/zlid-io/rust"' "$ROOT/Cargo.toml"
 
 (
