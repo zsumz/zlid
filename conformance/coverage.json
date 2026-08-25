@@ -1,0 +1,94 @@
+{
+  "version": 1,
+  "fixture": "conformance/zlid-v0.1-golden.json",
+  "requiredCaseIds": {
+    "ordered": [
+      "O1",
+      "O2",
+      "O3",
+      "O4",
+      "O5",
+      "O6",
+      "O7",
+      "O8",
+      "O9",
+      "O10"
+    ],
+    "random": [
+      "R1",
+      "R2",
+      "R3"
+    ],
+    "alias": [
+      "A1",
+      "A2",
+      "A3",
+      "A4",
+      "A5",
+      "A6",
+      "A7",
+      "A8",
+      "A9"
+    ],
+    "sentinels": [
+      "S1",
+      "S2"
+    ],
+    "opaque": [
+      "X1",
+      "X2",
+      "X3"
+    ],
+    "friendlyParsing": [
+      "F1",
+      "F2",
+      "F3",
+      "F4"
+    ],
+    "negativeParsing": [
+      "N1",
+      "N2",
+      "N3",
+      "N4",
+      "N5",
+      "N6",
+      "N7"
+    ],
+    "invalidOperations": [
+      "IO1",
+      "IO2",
+      "IO3",
+      "IO4",
+      "IO5",
+      "IO6"
+    ],
+    "partition": [
+      "P1",
+      "P2",
+      "P3",
+      "P4",
+      "P5",
+      "P6"
+    ],
+    "compare": [
+      "C1",
+      "C2",
+      "C3",
+      "C4",
+      "C5",
+      "C6"
+    ],
+    "generated": [
+      "PG1",
+      "PG2",
+      "PG3",
+      "PG4"
+    ],
+    "generator": [
+      "G1",
+      "G2",
+      "G3",
+      "G4"
+    ]
+  }
+}

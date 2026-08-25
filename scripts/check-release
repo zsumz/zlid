@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+export CARGO_TARGET_DIR="${CARGO_TARGET_DIR:-$ROOT/target}"
+export CARGO_INCREMENTAL="${CARGO_INCREMENTAL:-0}"
+
+if [[ -n "$(git -C "$ROOT" status --porcelain --untracked-files=all)" ]]; then
+  echo "release checks require a clean Git worktree" >&2
+  exit 1
+fi
+
+"$ROOT/scripts/check"
+"$ROOT/scripts/check-package"
+
+version="$(sed -n 's/^version = "\([^"]*\)"/\1/p' "$ROOT/Cargo.toml" | head -1)"
+archive="$CARGO_TARGET_DIR/package/zlid-$version.crate"
+tmp_root="${ZLID_RELEASE_TMPDIR:-${TMPDIR:-$CARGO_TARGET_DIR}}"
+mkdir -p "$tmp_root"
+audit_dir="$(mktemp -d "$tmp_root/zlid-release.XXXXXX")"
+trap 'rm -rf "$audit_dir"' EXIT
+
+tar -xzf "$archive" -C "$audit_dir"
+package_root="$audit_dir/zlid-$version"
+
+CARGO_TARGET_DIR="$audit_dir/package-target" \
+  cargo test --manifest-path "$package_root/Cargo.toml" --locked --all-targets
+CARGO_TARGET_DIR="$audit_dir/package-target" \
+  cargo test --manifest-path "$package_root/Cargo.toml" --locked --doc
+
+mkdir -p "$audit_dir/consumer/src"
+cat > "$audit_dir/consumer/Cargo.toml" <<EOF
+[package]
+name = "zlid_release_consumer"
+version = "0.0.0"
+edition = "2021"
+
+[dependencies]
+zlid = { path = "$package_root" }
+EOF
+
+cat > "$audit_dir/consumer/src/main.rs" <<'EOF'
+use zlid::{Inspection, Profile, Zlid};
+
+fn main() -> zlid::Result<()> {
+    let parsed = Zlid::parse("01k2r7-kfwe58 07000000000001")?;
+    assert_eq!(parsed.text(), "01K2R7KFWE5807000000000001");
+
+    let generated = Zlid::generator(Profile::Default, 42).next()?;
+    assert!(matches!(generated.inspect(), Inspection::Ordered { partition: 42, .. }));
+    assert!(matches!(Zlid::random()?.inspect(), Inspection::Random { .. }));
+    Ok(())
+}
+EOF
+
+CARGO_TARGET_DIR="$audit_dir/consumer-target" \
+  cargo run --manifest-path "$audit_dir/consumer/Cargo.toml" --offline --quiet
+
+echo "Release checks passed for zlid $version"

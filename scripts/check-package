@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+package_args=(--manifest-path "$ROOT/Cargo.toml" --locked)
+if [[ "${1:-}" == "--allow-dirty" ]]; then
+  package_args+=(--allow-dirty)
+elif [[ -n "${1:-}" ]]; then
+  echo "usage: scripts/check-package [--allow-dirty]" >&2
+  exit 2
+fi
+
+listing="$(cargo package "${package_args[@]}" --list)"
+
+required=(
+  "Cargo.lock"
+  "Cargo.toml"
+  "CHANGELOG.md"
+  "LICENSE"
+  "README.md"
+  "conformance/coverage.json"
+  "conformance/zlid-v0.1-golden.json"
+  "conformance/zlid-v0.1-golden.sha256"
+  "examples/quickstart.rs"
+  "src/lib.rs"
+  "tests/api.rs"
+  "tests/conformance.rs"
+)
+
+for file in "${required[@]}"; do
+  if ! grep -Fxq "$file" <<<"$listing"; then
+    echo "package is missing $file" >&2
+    exit 1
+  fi
+done
+
+for forbidden in ".github/" "scripts/" "target/" ".DS_Store" "AGENTS.md"; do
+  if grep -Fq "$forbidden" <<<"$listing"; then
+    echo "package unexpectedly contains $forbidden" >&2
+    exit 1
+  fi
+done
+
+cargo package "${package_args[@]}"
+echo "Package checks passed with $(wc -l <<<"$listing" | tr -d '[:space:]') files"

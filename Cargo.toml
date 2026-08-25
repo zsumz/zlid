@@ -1,0 +1,40 @@
+[package]
+name = "zlid"
+version = "0.1.0-beta.2"
+edition = "2021"
+rust-version = "1.88"
+description = "Canonical, sortable, collision-resistant identifiers for Rust"
+license = "Apache-2.0"
+repository = "https://github.com/zlid-io/rust"
+homepage = "https://zlid.io"
+documentation = "https://docs.rs/zlid"
+readme = "README.md"
+keywords = ["zlid", "identifier", "sortable", "alias"]
+categories = ["data-structures", "encoding"]
+include = [
+  "src/**/*.rs",
+  "tests/**/*.rs",
+  "examples/**/*.rs",
+  "conformance/*.json",
+  "conformance/*.sha256",
+  "Cargo.toml",
+  "Cargo.lock",
+  "README.md",
+  "CHANGELOG.md",
+  "LICENSE",
+]
+
+[lib]
+name = "zlid"
+path = "src/lib.rs"
+
+[dependencies]
+getrandom = "0.4.3"
+
+[features]
+default = []
+wasm-js = ["getrandom/wasm_js"]
+
+[lints.rust]
+missing_docs = "warn"
+unsafe_code = "forbid"

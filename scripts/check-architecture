@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+failure=0
+
+while IFS= read -r -d '' file; do
+  relative="${file#"$ROOT/"}"
+  lines="$(wc -l < "$file" | tr -d '[:space:]')"
+  limit=300
+  if [[ "$relative" == "src/lib.rs" ]]; then
+    limit=240
+  fi
+  if (( lines > limit )); then
+    echo "$relative has $lines lines; limit is $limit" >&2
+    failure=1
+  fi
+done < <(find "$ROOT/src" "$ROOT/tests" -type f -name '*.rs' -print0)
+
+if rg -n '\bunsafe\b' "$ROOT/src"; then
+  echo "unsafe Rust is not allowed" >&2
+  failure=1
+fi
+
+if rg -n 'todo!|unimplemented!' "$ROOT/src" "$ROOT/tests"; then
+  echo "unfinished Rust macros are not allowed" >&2
+  failure=1
+fi
+
+if rg -n -U '#\[cfg\(test\)\]\nmod tests \{' "$ROOT/src"; then
+  echo "inline test modules are not allowed; keep tests in separate files" >&2
+  failure=1
+fi
+
+for forbidden in common helpers misc utils; do
+  if [[ -e "$ROOT/src/$forbidden.rs" || -d "$ROOT/src/$forbidden" ]]; then
+    echo "generic production module name is not allowed: $forbidden" >&2
+    failure=1
+  fi
+done
+
+if (( failure != 0 )); then
+  exit 1
+fi
+
+echo "Architecture checks passed"
