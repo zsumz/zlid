@@ -17,6 +17,8 @@ mod ordered_types;
 mod partition;
 mod profile;
 mod random;
+#[cfg(feature = "serde")]
+mod serde_impl;
 mod shared;
 mod text;
 
@@ -35,6 +37,11 @@ pub use ordered::OrderedGenerator;
 pub use profile::Profile;
 
 /// Immutable 16-byte ZLID value.
+///
+/// With the optional `serde` feature, human-readable formats use one canonical
+/// uppercase 26-character string. Non-human-readable formats use a Serde tuple
+/// containing exactly 16 `u8` elements, in wire order; the contract is not a
+/// Serde byte string or a variable-length sequence.
 #[repr(transparent)]
 #[derive(Copy, Clone, Eq, PartialEq, Hash)]
 pub struct ZLID(pub(crate) [u8; BYTE_LENGTH]);

@@ -8,6 +8,8 @@ All notable changes to this project are documented here.
   injectable generator seams under `wire` and `advanced` modules.
 - Added semantic non-exhaustive errors, explicit representation constants,
   strict canonical parsing, and allocation-free family classification.
+- Added optional Serde support with canonical text for human-readable formats
+  and an explicit 16-element byte tuple contract for binary formats.
 - Added scheduled fuzzing and an advisory same-runner benchmark workflow while
   preserving every ZLID v0.1 wire byte and generator-state transition.
 - Documented deterministic alias linkability, visible alias tag metadata, and

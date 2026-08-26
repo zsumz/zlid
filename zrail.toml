@@ -43,6 +43,33 @@ kind = "registry"
 requirement = "0.3.104"
 
 [[dependencies.crate_root]]
+package = "postcard"
+reason = "Test-only Postcard checks pin the compact encoding of the 16-element Serde tuple."
+root = "postcard"
+
+[dependencies.crate_root.source]
+kind = "registry"
+requirement = "1.1.3"
+
+[[dependencies.crate_root]]
+package = "serde"
+reason = "The optional Serde integration defines explicit human-readable and binary representations."
+root = "serde"
+
+[dependencies.crate_root.source]
+kind = "registry"
+requirement = "1.0.229"
+
+[[dependencies.crate_root]]
+package = "serde_json"
+reason = "Test-only JSON checks enforce canonical human-readable Serde behavior."
+root = "serde_json"
+
+[dependencies.crate_root.source]
+kind = "registry"
+requirement = "1.0.151"
+
+[[dependencies.crate_root]]
 package = "sha2"
 reason = "The reviewed RustCrypto SHA-256 implementation backs ZLID-A HMAC."
 root = "sha2"

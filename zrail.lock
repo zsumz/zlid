@@ -2,19 +2,19 @@
 schema = 2
 semantics = 3
 producer = "0.0.3-rc.4"
-contract_sha256 = "37dc9a8587365b2efc2b04cc0f2d175a72e6bc01f811cc768e500e142d5b8ebc"
+contract_sha256 = "9ccf8d9fec32a9f7e78b735e89cc884e5458a61a70d44bbf0ecea9b2461b2d75"
 ratchet = []
 
 [analysis]
-inventory_sha256 = "d99fd6df3028f6cbfd271965c86e05278ddb2650a3c3c1670c48c83c8017da02"
+inventory_sha256 = "662269420b588e8524a1f9723234328db8de9aede4dc5e1d99acb8aed3ee8d14"
 exclusions_sha256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-cargo_lock_sha256 = "676c98a8048b3ec37a752cc6a24240c87b806bdbfb679ccdbbc4f0e2964172dd"
+cargo_lock_sha256 = "c0ff19d8b06220bff9a9faf1c8fe0787cb3c569077b1ca3851133b86f6ba8c2c"
 packages = 1
-targets = 16
-physical_rust_files = 58
-base_source_contexts = 81
+targets = 18
+physical_rust_files = 62
+base_source_contexts = 86
 derived_source_contexts = 0
-source_facts = 17500
+source_facts = 18436
 projection_queries = 0
 projected_facts = 0
 unresolved_bindings = 0
@@ -22,7 +22,7 @@ analyzer_semantics = 3
 
 [[analysis.contract_source]]
 path = "zrail.toml"
-sha256 = "3117c112950d3dc9fcdfe8d0273d88daf13f18c9a256f57f087bf201f7f0c512"
+sha256 = "2b97cdc9caf945ffcdd18f2c90ed1eaeb42b4f8840f781f0c33cd4805b7b9827"
 
 [[package]]
 name = "zlid"
@@ -80,6 +80,45 @@ default_features = true
 [package.dependency.source]
 kind = "registry"
 requirement = "0.3.104"
+
+[[package.dependency]]
+alias = "postcard"
+name = "postcard"
+crate_root = "postcard"
+kind = "development"
+scope = "external"
+optional = false
+default_features = false
+
+[package.dependency.source]
+kind = "registry"
+requirement = "1.1.3"
+
+[[package.dependency]]
+alias = "serde"
+name = "serde"
+crate_root = "serde"
+kind = "normal"
+scope = "external"
+optional = true
+default_features = false
+
+[package.dependency.source]
+kind = "registry"
+requirement = "1.0.229"
+
+[[package.dependency]]
+alias = "serde_json"
+name = "serde_json"
+crate_root = "serde_json"
+kind = "development"
+scope = "external"
+optional = false
+default_features = true
+
+[package.dependency.source]
+kind = "registry"
+requirement = "1.0.151"
 
 [[package.dependency]]
 alias = "sha2"

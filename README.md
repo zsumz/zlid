@@ -39,6 +39,26 @@ Run the complete example from a checkout:
 cargo run --example quickstart
 ```
 
+## Text and Serde
+
+`id.text()` and `id.to_string()` return the canonical uppercase 26-character
+Crockford Base32 form. `ZLID::parse` and `str::parse` accept lowercase,
+separators, and the Crockford aliases `O`, `I`, and `L` for human input.
+`ZLID::parse_canonical` accepts only the exact storage and protocol form.
+Canonical text and raw bytes have the same sort order; chronological meaning
+applies to ordered ZLIDs.
+
+Enable the optional `serde` feature for serialization frameworks:
+
+```toml
+[dependencies]
+zlid = { version = "=0.0.1-rc.4", features = ["serde"] }
+```
+
+Human-readable formats such as JSON use canonical text and deserialize it
+strictly. Binary formats receive a fixed tuple of 16 bytes; the surrounding
+format defines framing and trailing-byte policy.
+
 ## Families
 
 | Family | Use |

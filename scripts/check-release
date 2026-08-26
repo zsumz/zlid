@@ -25,9 +25,11 @@ tar -xzf "$archive" -C "$audit_dir"
 package_root="$audit_dir/zlid-$version"
 
 CARGO_TARGET_DIR="$audit_dir/package-target" \
-  cargo test --manifest-path "$package_root/Cargo.toml" --locked --all-targets
+  cargo test --manifest-path "$package_root/Cargo.toml" --locked \
+    --all-targets --all-features
 CARGO_TARGET_DIR="$audit_dir/package-target" \
-  cargo test --manifest-path "$package_root/Cargo.toml" --locked --doc
+  cargo test --manifest-path "$package_root/Cargo.toml" --locked \
+    --doc --all-features
 CARGO_TARGET_DIR="$audit_dir/package-target" \
   cargo run --manifest-path "$package_root/Cargo.toml" --locked \
     --example quickstart --all-features --quiet
@@ -40,15 +42,19 @@ version = "0.0.0"
 edition = "2021"
 
 [dependencies]
-zlid = { path = "$package_root" }
+serde_json = "=1.0.151"
+zlid = { path = "$package_root", features = ["serde"] }
 EOF
 
 cat > "$audit_dir/consumer/src/main.rs" <<'EOF'
 use zlid::{Inspection, OrderedGenerator, Profile, ZLID};
 
-fn main() -> zlid::Result<()> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let parsed = ZLID::parse("01k2r7-kfwe58 07000000000001")?;
     assert_eq!(parsed.text(), "01K2R7KFWE5807000000000001");
+    let json = serde_json::to_string(&parsed)?;
+    assert_eq!(json, "\"01K2R7KFWE5807000000000001\"");
+    assert_eq!(serde_json::from_str::<ZLID>(&json)?, parsed);
 
     let generated = OrderedGenerator::new(Profile::Default, 42).next()?;
     assert!(matches!(generated.inspect(), Inspection::Ordered { partition: 42, .. }));

@@ -86,7 +86,7 @@ jobs:
           toolchain: 1.88.0
           profile: minimal
           update: false
-      - run: cargo test --locked --all-targets
+      - run: cargo test --locked --all-targets --all-features
 
   wasm:
     name: WebAssembly / ${{ matrix.toolchain }}
@@ -128,14 +128,14 @@ jobs:
           echo "$install_dir" >> "$GITHUB_PATH"
       - run: >-
           cargo check --locked --target wasm32-unknown-unknown
-          --features wasm-js
+          --all-targets --all-features
       - name: Run WebAssembly APIs under Node.js
         if: matrix.toolchain == 'stable'
         env:
           CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER: wasm-bindgen-test-runner
         run: >-
           cargo test --locked --target wasm32-unknown-unknown
-          --features wasm-js --test wasm_runtime
+          --all-features --test wasm_runtime
 
   platform:
     name: ${{ matrix.os }} / stable
@@ -152,7 +152,7 @@ jobs:
           toolchain: stable
           profile: minimal
           update: false
-      - run: cargo test --locked --all-targets
+      - run: cargo test --locked --all-targets --all-features
 
   required:
     name: required

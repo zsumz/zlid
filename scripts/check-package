@@ -34,10 +34,12 @@ required=(
   "tests/ordered_failure_atomicity.rs"
   "tests/ordered_properties.rs"
   "tests/performance_allocations.rs"
+  "tests/serde.rs"
   "tests/shared_generation.rs"
   "tests/support/legacy_alias.rs"
   "tests/support/hex.rs"
   "tests/support/legacy_sha256.rs"
+  "tests/text_api.rs"
   "tests/value_properties.rs"
   "tests/wasm_runtime.rs"
 )

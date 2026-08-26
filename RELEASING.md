@@ -18,10 +18,13 @@ the version and the stable-release intent.
 
 ## Publish
 
-1. Create a signed annotated tag `v<version>`. Verify both the tag object's
+1. Push the final commit and wait for required CI on that exact commit.
+2. Dispatch the Fuzz and Benchmark workflows for that commit and review their
+   retained evidence.
+3. Create a signed annotated tag `v<version>`. Verify both the tag object's
    signature and the signature of the commit it resolves to.
-2. Push the commit and tag; wait for required CI to pass.
-3. Run `cargo publish --locked` only after explicit release approval.
+4. Push the tag.
+5. Run `cargo publish --locked` only after explicit release approval.
 
 ## Public proof
 
@@ -33,5 +36,6 @@ After crates.io indexes the release:
 4. Confirm `https://docs.rs/zlid/<version>/zlid/` returns the expected API docs.
 5. Create the GitHub release from the exact signed tag.
 
-The first release is manual. Configure crates.io trusted publishing only after
-the crate exists and the GitHub environment has been reviewed.
+Publication is intentionally manual. Move to crates.io trusted publishing only
+with explicit maintainer approval after a protected GitHub release environment
+has been configured and reviewed.
