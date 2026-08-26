@@ -6,7 +6,7 @@ on:
       baseline_tag:
         description: Baseline release tag
         required: true
-        default: v0.0.1-rc.3
+        default: v0.0.1-rc.4
         type: string
   schedule:
     - cron: "23 5 * * 1"
@@ -19,7 +19,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  BASELINE_TAG: ${{ inputs.baseline_tag || 'v0.0.1-rc.3' }}
+  BASELINE_TAG: ${{ inputs.baseline_tag || 'v0.0.1-rc.4' }}
   CARGO_TERM_COLOR: always
   RUST_VERSION: 1.98.0
 
@@ -37,7 +37,7 @@ jobs:
       - name: Check out baseline
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
-          ref: ${{ inputs.baseline_tag || 'v0.0.1-rc.3' }}
+          ref: ${{ inputs.baseline_tag || 'v0.0.1-rc.4' }}
           path: baseline
           persist-credentials: false
       - name: Set up exact stable Rust
