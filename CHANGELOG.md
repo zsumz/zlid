@@ -12,6 +12,7 @@ All notable changes to this project are documented here.
   and an explicit 16-element byte tuple contract for binary formats.
 - Added scheduled fuzzing and an advisory same-runner benchmark workflow while
   preserving every ZLID v0.1 wire byte and generator-state transition.
+- Improved short-input partition throughput without changing long-input behavior.
 - Documented deterministic alias linkability, visible alias tag metadata, and
   the current Node.js WebAssembly runtime evidence boundary.
 
